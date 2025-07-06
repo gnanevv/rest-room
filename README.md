@@ -2,23 +2,15 @@
 
 ## Description
 
-Rest Room is a mobile application that allows users to book and manage their hotel stays. The app provides a user-friendly interface for booking hotels, viewing available rooms, and managing reservations. It also includes features for tracking travel history, managing payment information, and accessing hotel amenities and services.
+Rest Room is a mobile application that allows users find public restrooms. The app provides a user-friendly interface for searching and finding public restrooms. It also includes features for tracking travel history, managing payment information.
+The app is still in development and is not ready for production. The public restroom data is not real and is only for testing purposes.
 
 ## Tech Stack
 
 - React Native
 - Expo
 - Nativewind
-- React Navigation
-- React Native Vector Icons
-- React Native Gesture Handler
 - React Native Reanimated
-- React Native Safe Area Context
-- React Native Screens
-- React Native Svg
-- React Native Url Polyfill
-- React Native Web
-- React Native Webview
 
 ## Installation
 
