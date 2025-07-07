@@ -17,29 +17,7 @@ import MapView, {
   Circle,
   Region,
 } from 'react-native-maps';
-import {
-  MapPin,
-  Star,
-  Navigation,
-  ZoomIn,
-  ZoomOut,
-  Locate,
-  X,
-  AlertTriangle,
-  CheckCircle,
-  Accessibility,
-  Filter,
-  Layers,
-  Route,
-  Clock,
-  Euro,
-  Users,
-  Camera,
-  Heart,
-  Share2,
-  Phone,
-  ExternalLink,
-} from 'lucide-react-native';
+import { MapPin, Star, Navigation, ZoomIn, ZoomOut, Locate, X, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Accessibility, Filter, Layers, Route, Clock, Euro, Users, Camera, Heart, Share2, Phone, ExternalLink } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Restroom } from '@/types/restroom';

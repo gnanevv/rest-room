@@ -17,18 +17,7 @@ import MapView, {
   Circle,
 } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import {
-  MapPin,
-  Star,
-  Navigation,
-  ZoomIn,
-  ZoomOut,
-  Locate,
-  X,
-  AlertTriangle,
-  CheckCircle,
-  Accessibility,
-} from 'lucide-react-native';
+import { MapPin, Star, Navigation, ZoomIn, ZoomOut, Locate, X, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Accessibility } from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 import mapStyle from '@/assets/map/map-style.json';
 
