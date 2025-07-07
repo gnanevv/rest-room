@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, Star, Euro, Accessibility, Navigation, Layers, Filter } from 'lucide-react-native';
+import {
+  MapPin,
+  Star,
+  Euro,
+  Accessibility,
+  Navigation,
+  Layers,
+  Filter,
+} from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 
 interface MapViewComponentProps {
@@ -15,7 +31,11 @@ interface MapViewComponentProps {
 
 const { width, height } = Dimensions.get('window');
 
-export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: MapViewComponentProps) {
+export function MapViewComponent({
+  restrooms,
+  onRestroomPress,
+  userLocation,
+}: MapViewComponentProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -29,32 +49,48 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-      case 'available': return 'Свободно';
-      case 'occupied': return 'Заето';
-      case 'out_of_order': return 'Неработещо';
-      default: return 'Неизвестно';
+      case 'available':
+        return 'Свободно';
+      case 'occupied':
+        return 'Заето';
+      case 'out_of_order':
+        return 'Неработещо';
+      default:
+        return 'Неизвестно';
     }
   };
 
   const getBusinessTypeText = (businessType: string) => {
     switch (businessType) {
-      case 'restaurant': return 'Ресторант';
-      case 'cafe': return 'Кафе';
-      case 'bar': return 'Бар';
-      case 'public': return 'Обществено';
-      case 'gas_station': return 'Бензиностанция';
-      case 'mall': return 'Мол';
-      default: return 'Други';
+      case 'restaurant':
+        return 'Ресторант';
+      case 'cafe':
+        return 'Кафе';
+      case 'bar':
+        return 'Бар';
+      case 'public':
+        return 'Обществено';
+      case 'gas_station':
+        return 'Бензиностанция';
+      case 'mall':
+        return 'Мол';
+      default:
+        return 'Други';
     }
   };
 
-  const filteredRestrooms = restrooms.filter(restroom => {
+  const filteredRestrooms = restrooms.filter((restroom) => {
     switch (selectedFilter) {
-      case 'available': return restroom.availability === 'available';
-      case 'high_rated': return restroom.rating >= 4.5;
-      case 'free': return !restroom.isPaid;
-      case 'accessible': return restroom.accessibility;
-      default: return true;
+      case 'available':
+        return restroom.availability === 'available';
+      case 'high_rated':
+        return restroom.rating >= 4.5;
+      case 'free':
+        return !restroom.isPaid;
+      case 'accessible':
+        return restroom.accessibility;
+      default:
+        return true;
     }
   });
 
@@ -67,7 +103,7 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
 
   const openInMaps = (restroom: Restroom) => {
     const { latitude, longitude } = restroom.coordinates;
-    
+
     if (Platform.OS === 'ios') {
       const url = `maps://app?daddr=${latitude},${longitude}`;
       console.log('Opening iOS Maps:', url);
@@ -93,7 +129,12 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
         style={styles.gridItemGradient}
       >
         <View style={styles.gridItemHeader}>
-          <View style={[styles.statusIndicator, { backgroundColor: getMarkerColor(restroom) }]} />
+          <View
+            style={[
+              styles.statusIndicator,
+              { backgroundColor: getMarkerColor(restroom) },
+            ]}
+          />
           <TouchableOpacity
             style={styles.navigationButton}
             onPress={() => openInMaps(restroom)}
@@ -101,21 +142,27 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
             <Navigation size={16} color="#3B82F6" strokeWidth={2} />
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.gridItemContent}>
           <MapPin size={24} color={getMarkerColor(restroom)} strokeWidth={2} />
-          <Text style={styles.gridItemTitle} numberOfLines={2}>{restroom.name}</Text>
-          
+          <Text style={styles.gridItemTitle} numberOfLines={2}>
+            {restroom.name}
+          </Text>
+
           <View style={styles.gridItemMeta}>
             <View style={styles.ratingContainer}>
               <Star size={12} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
-              <Text style={styles.ratingText}>{restroom.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingText}>
+                {restroom.rating.toFixed(1)}
+              </Text>
             </View>
             {restroom.distance && (
-              <Text style={styles.distanceText}>{restroom.distance.toFixed(1)} км</Text>
+              <Text style={styles.distanceText}>
+                {restroom.distance.toFixed(1)} км
+              </Text>
             )}
           </View>
-          
+
           <View style={styles.amenitiesRow}>
             {restroom.accessibility && (
               <Accessibility size={12} color="#10B981" strokeWidth={2} />
@@ -141,7 +188,12 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
       >
         <View style={styles.listItemHeader}>
           <View style={styles.listItemTitleContainer}>
-            <View style={[styles.statusIndicator, { backgroundColor: getMarkerColor(restroom) }]} />
+            <View
+              style={[
+                styles.statusIndicator,
+                { backgroundColor: getMarkerColor(restroom) },
+              ]}
+            />
             <View style={styles.listItemTitleContent}>
               <Text style={styles.listItemTitle}>{restroom.name}</Text>
               <Text style={styles.listItemAddress}>{restroom.address}</Text>
@@ -154,22 +206,26 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
             <Navigation size={20} color="#3B82F6" strokeWidth={2} />
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.listItemMeta}>
           <View style={styles.ratingContainer}>
             <Star size={14} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
             <Text style={styles.ratingText}>{restroom.rating.toFixed(1)}</Text>
           </View>
-          
+
           <View style={styles.businessTypeContainer}>
-            <Text style={styles.businessTypeText}>{getBusinessTypeText(restroom.businessType)}</Text>
+            <Text style={styles.businessTypeText}>
+              {getBusinessTypeText(restroom.businessType)}
+            </Text>
           </View>
-          
+
           {restroom.distance && (
-            <Text style={styles.distanceText}>{restroom.distance.toFixed(1)} км</Text>
+            <Text style={styles.distanceText}>
+              {restroom.distance.toFixed(1)} км
+            </Text>
           )}
         </View>
-        
+
         <View style={styles.amenitiesContainer}>
           {restroom.accessibility && (
             <View style={styles.amenityIcon}>
@@ -189,46 +245,74 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
   return (
     <View style={styles.container}>
       {/* Header with filters and view toggle */}
-      <LinearGradient
-        colors={['#1E40AF', '#3B82F6']}
-        style={styles.header}
-      >
+      <LinearGradient colors={['#1E40AF', '#3B82F6']} style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Карта на тоалетни</Text>
           <Text style={styles.headerSubtitle}>
             {sortedRestrooms.length} от {restrooms.length} места
           </Text>
         </View>
-        
+
         <View style={styles.headerControls}>
           <TouchableOpacity
-            style={[styles.viewToggle, viewMode === 'grid' && styles.viewToggleActive]}
+            style={[
+              styles.viewToggle,
+              viewMode === 'grid' && styles.viewToggleActive,
+            ]}
             onPress={() => setViewMode('grid')}
           >
-            <Layers size={20} color={viewMode === 'grid' ? '#FFFFFF' : '#BFDBFE'} strokeWidth={2} />
+            <Layers
+              size={20}
+              color={viewMode === 'grid' ? '#FFFFFF' : '#BFDBFE'}
+              strokeWidth={2}
+            />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.viewToggle, viewMode === 'list' && styles.viewToggleActive]}
+            style={[
+              styles.viewToggle,
+              viewMode === 'list' && styles.viewToggleActive,
+            ]}
             onPress={() => setViewMode('list')}
           >
-            <Filter size={20} color={viewMode === 'list' ? '#FFFFFF' : '#BFDBFE'} strokeWidth={2} />
+            <Filter
+              size={20}
+              color={viewMode === 'list' ? '#FFFFFF' : '#BFDBFE'}
+              strokeWidth={2}
+            />
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
       {/* Filter buttons */}
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filterContainer}
         contentContainerStyle={styles.filterContent}
       >
         {[
           { key: 'all', label: 'Всички', count: restrooms.length },
-          { key: 'available', label: 'Свободни', count: restrooms.filter(r => r.availability === 'available').length },
-          { key: 'high_rated', label: 'Високо оценени', count: restrooms.filter(r => r.rating >= 4.5).length },
-          { key: 'free', label: 'Безплатни', count: restrooms.filter(r => !r.isPaid).length },
-          { key: 'accessible', label: 'Достъпни', count: restrooms.filter(r => r.accessibility).length },
+          {
+            key: 'available',
+            label: 'Свободни',
+            count: restrooms.filter((r) => r.availability === 'available')
+              .length,
+          },
+          {
+            key: 'high_rated',
+            label: 'Високо оценени',
+            count: restrooms.filter((r) => r.rating >= 4.5).length,
+          },
+          {
+            key: 'free',
+            label: 'Безплатни',
+            count: restrooms.filter((r) => !r.isPaid).length,
+          },
+          {
+            key: 'accessible',
+            label: 'Достъпни',
+            count: restrooms.filter((r) => r.accessibility).length,
+          },
         ].map((filter) => (
           <TouchableOpacity
             key={filter.key}
@@ -277,19 +361,27 @@ export function MapViewComponent({ restrooms, onRestroomPress, userLocation }: M
           <Text style={styles.legendTitle}>Легенда</Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#10B981' }]}
+              />
               <Text style={styles.legendText}>Отлично (4.5+)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#3B82F6' }]}
+              />
               <Text style={styles.legendText}>Добро (4.0+)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#F59E0B' }]}
+              />
               <Text style={styles.legendText}>Заето</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#EF4444' }]}
+              />
               <Text style={styles.legendText}>Неработещо</Text>
             </View>
           </View>

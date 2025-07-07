@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Platform, Text, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Platform,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { InteractiveMap } from '@/components/InteractiveMap';
 import { mockRestrooms } from '@/data/mockData';
@@ -8,7 +15,9 @@ import { MapPin, Layers, Filter } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 export default function MapScreen() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
+  );
   const [restrooms, setRestrooms] = useState<Restroom[]>(mockRestrooms);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
@@ -69,7 +78,10 @@ export default function MapScreen() {
       } else {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Разрешение за локация', 'Нужен е достъп до локацията за да показваме най-близките тоалетни.');
+          Alert.alert(
+            'Разрешение за локация',
+            'Нужен е достъп до локацията за да показваме най-близките тоалетни.'
+          );
           return;
         }
 
@@ -93,50 +105,18 @@ export default function MapScreen() {
     }
   };
 
-  const handleRestroomPress = (restroom: Restroom) => {
-    Alert.alert(
-      restroom.name,
-      `${restroom.address}\n\nРейтинг: ${restroom.rating}/5\nЧистота: ${restroom.cleanliness}/5\n\nСтатус: ${getAvailabilityText(restroom.availability)}`,
-      [
-        { text: 'Затвори', style: 'cancel' },
-        { text: 'Навигация', onPress: () => handleNavigation(restroom) },
-      ]
-    );
-  };
-
-  const getAvailabilityText = (availability: string) => {
-    switch (availability) {
-      case 'available': return 'Свободно';
-      case 'occupied': return 'Заето';
-      case 'out_of_order': return 'Неработещо';
-      default: return 'Неизвестно';
-    }
-  };
-
-  const handleNavigation = (restroom: Restroom) => {
-    const { latitude, longitude } = restroom.coordinates;
-    
-    if (Platform.OS === 'ios') {
-      const url = `maps://app?daddr=${latitude},${longitude}`;
-      Alert.alert('Навигация', `Отваряне на Apple Maps към ${restroom.name}...`);
-    } else if (Platform.OS === 'android') {
-      const url = `geo:${latitude},${longitude}?q=${latitude},${longitude}(${restroom.name})`;
-      Alert.alert('Навигация', `Отваряне на Google Maps към ${restroom.name}...`);
-    } else {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      if (typeof window !== 'undefined') {
-        window.open(url, '_blank');
-      }
-    }
-  };
-
-  const filteredRestrooms = restrooms.filter(restroom => {
+  const filteredRestrooms = restrooms.filter((restroom) => {
     switch (selectedFilter) {
-      case 'available': return restroom.availability === 'available';
-      case 'high_rated': return restroom.rating >= 4.5;
-      case 'free': return !restroom.isPaid;
-      case 'accessible': return restroom.accessibility;
-      default: return true;
+      case 'available':
+        return restroom.availability === 'available';
+      case 'high_rated':
+        return restroom.rating >= 4.5;
+      case 'free':
+        return !restroom.isPaid;
+      case 'accessible':
+        return restroom.accessibility;
+      default:
+        return true;
     }
   });
 
@@ -174,10 +154,10 @@ export default function MapScreen() {
               ]}
               onPress={() => setSelectedFilter(filter.key)}
             >
-              <filter.icon 
-                size={16} 
-                color={selectedFilter === filter.key ? '#1E40AF' : '#FFFFFF'} 
-                strokeWidth={2} 
+              <filter.icon
+                size={16}
+                color={selectedFilter === filter.key ? '#1E40AF' : '#FFFFFF'}
+                strokeWidth={2}
               />
               <Text
                 style={[
@@ -195,11 +175,14 @@ export default function MapScreen() {
       {/* Interactive Map */}
       <InteractiveMap
         restrooms={filteredRestrooms}
-        onRestroomPress={handleRestroomPress}
-        userLocation={location ? {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        } : undefined}
+        userLocation={
+          location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }
+            : undefined
+        }
       />
 
       {/* Map Legend */}
@@ -211,19 +194,27 @@ export default function MapScreen() {
           <Text style={styles.legendTitle}>Легенда</Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#10B981' }]}
+              />
               <Text style={styles.legendText}>Отлично (4.5+)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#3B82F6' }]}
+              />
               <Text style={styles.legendText}>Добро (4.0+)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#F59E0B' }]}
+              />
               <Text style={styles.legendText}>Заето</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: '#EF4444' }]}
+              />
               <Text style={styles.legendText}>Неработещо</Text>
             </View>
           </View>

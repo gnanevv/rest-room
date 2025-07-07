@@ -1,32 +1,41 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Dimensions, 
-  TouchableOpacity, 
-  Animated, 
-  PanResponder,
-  Platform 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  MapPin, 
-  Star, 
-  Euro, 
-  Accessibility, 
-  Navigation, 
-  ZoomIn, 
+import MapView, {
+  Marker,
+  PROVIDER_GOOGLE,
+  Polyline,
+  Camera,
+  Circle,
+} from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
+import {
+  MapPin,
+  Star,
+  Navigation,
+  ZoomIn,
   ZoomOut,
   Locate,
-  X
+  X,
+  AlertTriangle,
+  CheckCircle,
+  Accessibility,
 } from 'lucide-react-native';
-import Svg, { Circle, Path, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Restroom } from '@/types/restroom';
+import mapStyle from '@/assets/map/map-style.json';
+
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 interface InteractiveMapProps {
   restrooms: Restroom[];
-  onRestroomPress: (restroom: Restroom) => void;
   userLocation?: {
     latitude: number;
     longitude: number;
@@ -34,31 +43,73 @@ interface InteractiveMapProps {
 }
 
 const { width, height } = Dimensions.get('window');
-const MAP_WIDTH = width;
-const MAP_HEIGHT = height - 200;
 
-// Sofia bounds for our map
-const SOFIA_BOUNDS = {
-  north: 42.7500,
-  south: 42.6500,
-  east: 23.4000,
-  west: 23.2500,
-};
+export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps) {
+  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(
+    null
+  );
+  const [routeDetails, setRouteDetails] = useState<{ distance: number, duration: number } | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
+  const mapViewRef = useRef<MapView>(null);
 
-export function InteractiveMap({ restrooms, onRestroomPress, userLocation }: InteractiveMapProps) {
-  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [mapCenter, setMapCenter] = useState({ x: 0, y: 0 });
-  
-  const pan = useRef(new Animated.ValueXY()).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const popupAnimation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (selectedRestroom && userLocation && mapViewRef.current) {
+      mapViewRef.current.fitToCoordinates(
+        [userLocation, selectedRestroom.coordinates],
+        {
+          edgePadding: {
+            top: 100,
+            right: 50,
+            bottom: 300, // Make space for the popup
+            left: 50,
+          },
+          animated: true,
+        }
+      );
+    }
+  }, [selectedRestroom, userLocation]);
 
-  // Convert lat/lng to screen coordinates
-  const coordsToScreen = (lat: number, lng: number) => {
-    const x = ((lng - SOFIA_BOUNDS.west) / (SOFIA_BOUNDS.east - SOFIA_BOUNDS.west)) * MAP_WIDTH;
-    const y = ((SOFIA_BOUNDS.north - lat) / (SOFIA_BOUNDS.north - SOFIA_BOUNDS.south)) * MAP_HEIGHT;
-    return { x, y };
+  const handleMarkerPress = (restroom: Restroom) => {
+    setSelectedRestroom(restroom);
+    setRouteDetails(null);
+    setRouteCoordinates([]);
+  };
+
+  const closePopup = () => {
+    setSelectedRestroom(null);
+    setRouteDetails(null);
+    setRouteCoordinates([]);
+  };
+
+  const zoomIn = async () => {
+    if (!mapViewRef.current) return;
+    const camera = await mapViewRef.current.getCamera();
+    if (camera.altitude) {
+      camera.altitude /= 2;
+      mapViewRef.current.animateCamera(camera);
+    }
+  };
+
+  const zoomOut = async () => {
+    if (!mapViewRef.current) return;
+    const camera = await mapViewRef.current.getCamera();
+    if (camera.altitude) {
+      camera.altitude *= 2;
+      mapViewRef.current.animateCamera(camera);
+    }
+  };
+
+  const centerOnUser = () => {
+    if (userLocation && mapViewRef.current) {
+      mapViewRef.current.animateToRegion(
+        {
+          ...userLocation,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        1000
+      );
+    }
   };
 
   const getMarkerColor = (restroom: Restroom) => {
@@ -69,241 +120,88 @@ export function InteractiveMap({ restrooms, onRestroomPress, userLocation }: Int
     return '#6B7280';
   };
 
-  const getMarkerSize = (restroom: Restroom) => {
-    if (restroom.rating >= 4.5) return 24;
-    if (restroom.rating >= 4.0) return 20;
-    return 16;
-  };
-
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => {
-      pan.setOffset({
-        x: (pan.x as any)._value,
-        y: (pan.y as any)._value,
-      });
-    },
-    onPanResponderMove: Animated.event(
-      [null, { dx: pan.x, dy: pan.y }],
-      { useNativeDriver: false }
-    ),
-    onPanResponderRelease: () => {
-      pan.flattenOffset();
-    },
-  });
-
-  const handleMarkerPress = (restroom: Restroom) => {
-    setSelectedRestroom(restroom);
-    Animated.spring(popupAnimation, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 8,
-    }).start();
-  };
-
-  const closePopup = () => {
-    Animated.spring(popupAnimation, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 8,
-    }).start(() => {
-      setSelectedRestroom(null);
-    });
-  };
-
-  const zoomIn = () => {
-    const newZoom = Math.min(zoomLevel * 1.5, 3);
-    setZoomLevel(newZoom);
-    Animated.spring(scale, {
-      toValue: newZoom,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const zoomOut = () => {
-    const newZoom = Math.max(zoomLevel / 1.5, 0.5);
-    setZoomLevel(newZoom);
-    Animated.spring(scale, {
-      toValue: newZoom,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const centerOnUser = () => {
-    if (userLocation) {
-      const screenCoords = coordsToScreen(userLocation.latitude, userLocation.longitude);
-      Animated.spring(pan, {
-        toValue: {
-          x: MAP_WIDTH / 2 - screenCoords.x,
-          y: MAP_HEIGHT / 2 - screenCoords.y,
-        },
-        useNativeDriver: false,
-      }).start();
-    }
-  };
-
-  const openInMaps = (restroom: Restroom) => {
-    const { latitude, longitude } = restroom.coordinates;
-    
-    if (Platform.OS === 'ios') {
-      const url = `maps://app?daddr=${latitude},${longitude}`;
-      console.log('Opening iOS Maps:', url);
-    } else if (Platform.OS === 'android') {
-      const url = `geo:${latitude},${longitude}?q=${latitude},${longitude}(${restroom.name})`;
-      console.log('Opening Android Maps:', url);
-    } else {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      if (typeof window !== 'undefined') {
-        window.open(url, '_blank');
-      }
-    }
-  };
-
-  const CustomMarker = ({ restroom }: { restroom: Restroom }) => {
-    const screenCoords = coordsToScreen(restroom.coordinates.latitude, restroom.coordinates.longitude);
-    const markerColor = getMarkerColor(restroom);
-    const markerSize = getMarkerSize(restroom);
-
+  if (!GOOGLE_MAPS_API_KEY) {
     return (
-      <TouchableOpacity
-        style={[
-          styles.marker,
-          {
-            left: screenCoords.x - markerSize / 2,
-            top: screenCoords.y - markerSize,
-          },
-        ]}
-        onPress={() => handleMarkerPress(restroom)}
-        activeOpacity={0.8}
-      >
-        <Svg width={markerSize} height={markerSize} viewBox="0 0 24 24">
-          <Defs>
-            <RadialGradient id="markerGradient" cx="50%" cy="30%" r="70%">
-              <Stop offset="0%" stopColor={markerColor} stopOpacity="1" />
-              <Stop offset="100%" stopColor={markerColor} stopOpacity="0.8" />
-            </RadialGradient>
-          </Defs>
-          <Circle
-            cx="12"
-            cy="12"
-            r="10"
-            fill="url(#markerGradient)"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-          />
-          <Path
-            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-            fill="#FFFFFF"
-            scale="0.6"
-            translateX="4.8"
-            translateY="4.8"
-          />
-        </Svg>
-        
-        {/* Pulse animation for high-rated restrooms */}
-        {restroom.rating >= 4.5 && (
-          <View style={[styles.pulse, { backgroundColor: markerColor }]} />
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  const UserLocationMarker = () => {
-    if (!userLocation) return null;
-    
-    const screenCoords = coordsToScreen(userLocation.latitude, userLocation.longitude);
-    
-    return (
-      <View
-        style={[
-          styles.userMarker,
-          {
-            left: screenCoords.x - 12,
-            top: screenCoords.y - 12,
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={['#3B82F6', '#1E40AF']}
-          style={styles.userMarkerGradient}
-        >
-          <View style={styles.userMarkerInner} />
-        </LinearGradient>
+      <View style={styles.errorContainer}>
+        <AlertTriangle size={48} color="#EF4444" />
+        <Text style={styles.errorTitle}>API Key Missing</Text>
+        <Text style={styles.errorText}>
+          Google Maps API key is not configured. Please add it to your .env file as EXPO_PUBLIC_GOOGLE_MAPS_API_KEY.
+        </Text>
       </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
-      {/* Map Background */}
-      <LinearGradient
-        colors={['#E0F2FE', '#F0F9FF', '#FAFAFA']}
-        style={styles.mapBackground}
+      <MapView
+        ref={mapViewRef}
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        customMapStyle={mapStyle}
+        initialRegion={
+          userLocation
+            ? { ...userLocation, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }
+            : { latitude: 42.6977, longitude: 23.3219, latitudeDelta: 0.0922, longitudeDelta: 0.0421 } // Default to Sofia
+        }
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        onPress={closePopup}
       >
-        {/* Street Grid Pattern */}
-        <Svg width={MAP_WIDTH} height={MAP_HEIGHT} style={styles.streetGrid}>
-          {/* Horizontal streets */}
-          {Array.from({ length: 20 }, (_, i) => (
-            <Path
-              key={`h-${i}`}
-              d={`M 0 ${(i * MAP_HEIGHT) / 20} L ${MAP_WIDTH} ${(i * MAP_HEIGHT) / 20}`}
-              stroke="#E5E7EB"
-              strokeWidth="1"
-              opacity="0.3"
-            />
-          ))}
-          {/* Vertical streets */}
-          {Array.from({ length: 15 }, (_, i) => (
-            <Path
-              key={`v-${i}`}
-              d={`M ${(i * MAP_WIDTH) / 15} 0 L ${(i * MAP_WIDTH) / 15} ${MAP_HEIGHT}`}
-              stroke="#E5E7EB"
-              strokeWidth="1"
-              opacity="0.3"
-            />
-          ))}
-          {/* Major roads */}
-          <Path
-            d={`M 0 ${MAP_HEIGHT * 0.3} L ${MAP_WIDTH} ${MAP_HEIGHT * 0.4}`}
-            stroke="#CBD5E1"
-            strokeWidth="3"
-            opacity="0.6"
-          />
-          <Path
-            d={`M ${MAP_WIDTH * 0.2} 0 L ${MAP_WIDTH * 0.3} ${MAP_HEIGHT}`}
-            stroke="#CBD5E1"
-            strokeWidth="3"
-            opacity="0.6"
-          />
-        </Svg>
+        {userLocation && (
+          <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }}>
+            <View style={styles.userLocationMarker} />
+          </Marker>
+        )}
 
-        {/* Interactive Map Layer */}
-        <Animated.View
-          style={[
-            styles.mapLayer,
-            {
-              transform: [
-                { translateX: pan.x },
-                { translateY: pan.y },
-                { scale: scale },
-              ],
-            },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          {/* Restroom Markers */}
-          {restrooms.map((restroom) => (
-            <CustomMarker key={restroom.id} restroom={restroom} />
-          ))}
-          
-          {/* User Location Marker */}
-          <UserLocationMarker />
-        </Animated.View>
-      </LinearGradient>
+        {userLocation && (
+          <Circle
+            center={userLocation}
+            radius={1000}
+            fillColor="rgba(59, 130, 246, 0.1)"
+            strokeColor="rgba(59, 130, 246, 0.3)"
+            strokeWidth={1}
+          />
+        )}
 
-      {/* Map Controls */}
+        {restrooms.map((restroom) => (
+          <Marker
+            key={restroom.id}
+            coordinate={restroom.coordinates}
+            onPress={() => handleMarkerPress(restroom)}
+            tracksViewChanges={false}
+            anchor={{ x: 0.5, y: 1 }}
+          >
+            <View style={[styles.restroomMarker, { backgroundColor: getMarkerColor(restroom) }]}>
+              <MapPin size={20} color="white" />
+            </View>
+          </Marker>
+        ))}
+
+        {userLocation && selectedRestroom && (
+          <MapViewDirections
+            origin={userLocation}
+            destination={selectedRestroom.coordinates}
+            apikey={GOOGLE_MAPS_API_KEY}
+            strokeWidth={0} // Invisible
+            onReady={(result) => {
+              setRouteDetails({ distance: result.distance, duration: result.duration });
+              setRouteCoordinates(result.coordinates);
+            }}
+          />
+        )}
+
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeWidth={4}
+            strokeColor="#3B82F6"
+            lineDashPattern={[8, 8]}
+          />
+        )}
+      </MapView>
+
       <View style={styles.mapControls}>
         <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
           <ZoomIn size={20} color="#3B82F6" strokeWidth={2} />
@@ -316,96 +214,47 @@ export function InteractiveMap({ restrooms, onRestroomPress, userLocation }: Int
         </TouchableOpacity>
       </View>
 
-      {/* Restroom Popup */}
       {selectedRestroom && (
-        <Animated.View
-          style={[
-            styles.popup,
-            {
-              transform: [
-                {
-                  scale: popupAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1],
-                  }),
-                },
-                {
-                  translateY: popupAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [50, 0],
-                  }),
-                },
-              ],
-              opacity: popupAnimation,
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={['#FFFFFF', '#F8FAFC']}
-            style={styles.popupGradient}
-          >
-            <View style={styles.popupHeader}>
-              <View style={styles.popupTitleContainer}>
-                <View style={[
-                  styles.popupStatusIndicator, 
-                  { backgroundColor: getMarkerColor(selectedRestroom) }
-                ]} />
-                <View style={styles.popupTitleContent}>
-                  <Text style={styles.popupTitle}>{selectedRestroom.name}</Text>
-                  <Text style={styles.popupAddress}>{selectedRestroom.address}</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={styles.closeButton} onPress={closePopup}>
-                <X size={20} color="#6B7280" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.popupMeta}>
+        <View style={styles.popupContainer}>
+          <TouchableOpacity style={styles.closeButton} onPress={closePopup}>
+            <X size={20} color="#6B7280" strokeWidth={2} />
+          </TouchableOpacity>
+          <View style={styles.popupContent}>
+            <Image 
+              source={{ uri: 'https://via.placeholder.com/100' }} // Placeholder image
+              style={styles.popupImage}
+            />
+            <View style={styles.popupTextContainer}>
+              <Text style={styles.popupTitle}>{selectedRestroom.name}</Text>
               <View style={styles.ratingContainer}>
-                <Star size={16} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
+                <Star size={16} color="#F59E0B" fill="#F59E0B" />
                 <Text style={styles.ratingText}>{selectedRestroom.rating.toFixed(1)}</Text>
-                <Text style={styles.reviewCount}>({selectedRestroom.reviews.length})</Text>
+                <Text style={styles.reviewCount}>({selectedRestroom.reviews.length} reviews)</Text>
               </View>
-              
-              {selectedRestroom.distance && (
-                <Text style={styles.distanceText}>{selectedRestroom.distance.toFixed(1)} км</Text>
+              {routeDetails ? (
+                <Text style={styles.distanceText}>
+                  {routeDetails.distance.toFixed(1)} km away
+                </Text>
+              ) : (
+                <ActivityIndicator size="small" color="#3B82F6" style={{alignSelf: 'flex-start'}} />
               )}
             </View>
-
-            <View style={styles.popupAmenities}>
-              {selectedRestroom.accessibility && (
-                <View style={styles.amenityBadge}>
-                  <Accessibility size={14} color="#10B981" strokeWidth={2} />
-                  <Text style={styles.amenityText}>Достъпно</Text>
-                </View>
-              )}
-              {selectedRestroom.isPaid && (
-                <View style={styles.amenityBadge}>
-                  <Euro size={14} color="#F59E0B" strokeWidth={2} />
-                  <Text style={styles.amenityText}>
-                    {typeof selectedRestroom.price === 'number' ? selectedRestroom.price.toFixed(2) : '0.00'} лв
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.popupActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => onRestroomPress(selectedRestroom)}
-              >
-                <Text style={styles.actionButtonText}>Детайли</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.primaryActionButton]}
-                onPress={() => openInMaps(selectedRestroom)}
-              >
-                <Navigation size={16} color="#FFFFFF" strokeWidth={2} />
-                <Text style={styles.primaryActionButtonText}>Навигация</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+          </View>
+          <View style={styles.popupTagsContainer}>
+            {!selectedRestroom.isPaid && (
+              <View style={styles.tag}>
+                <CheckCircle size={14} color="#10B981" />
+                <Text style={styles.tagText}>Free</Text>
+              </View>
+            )}
+            {selectedRestroom.accessibility && (
+              <View style={styles.tag}>
+                <Accessibility size={14} color="#3B82F6" />
+                <Text style={styles.tagText}>Accessible</Text>
+              </View>
+            )}
+          </View>
+        </View>
       )}
     </View>
   );
@@ -416,57 +265,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F3F4F6',
   },
-  mapBackground: {
-    width: MAP_WIDTH,
-    height: MAP_HEIGHT,
-    position: 'relative',
+  map: {
+    width: width,
+    height: height,
   },
-  streetGrid: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+  userLocationMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#3B82F6',
+    borderWidth: 3,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,
   },
-  mapLayer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: MAP_WIDTH,
-    height: MAP_HEIGHT,
-  },
-  marker: {
-    position: 'absolute',
-    zIndex: 10,
-  },
-  pulse: {
-    position: 'absolute',
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
+  restroomMarker: {
+    padding: 8,
     borderRadius: 20,
-    opacity: 0.3,
-  },
-  userMarker: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    zIndex: 5,
-  },
-  userMarkerGradient: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    borderBottomRightRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  userMarkerInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,
   },
   mapControls: {
     position: 'absolute',
@@ -487,63 +313,45 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  popup: {
+  popupContainer: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 40,
     left: 16,
     right: 16,
+    backgroundColor: 'white',
     borderRadius: 20,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
   },
-  popupGradient: {
-    padding: 20,
-    borderRadius: 20,
-  },
-  popupHeader: {
+  popupContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'center',
   },
-  popupTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  popupImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  popupTextContainer: {
     flex: 1,
-    marginRight: 12,
-  },
-  popupStatusIndicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginTop: 2,
-  },
-  popupTitleContent: {
-    flex: 1,
-    marginLeft: 12,
+    gap: 6,
   },
   popupTitle: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#1F2937',
-    marginBottom: 4,
-  },
-  popupAddress: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#6B7280',
   },
   closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
     padding: 4,
-  },
-  popupMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -551,65 +359,57 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ratingText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#1F2937',
   },
   reviewCount: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   distanceText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
-  popupAmenities: {
+  popupTagsContainer: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
+    gap: 12,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
   },
-  amenityBadge: {
+  tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
     gap: 6,
   },
-  amenityText: {
+  tagText: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
     color: '#4B5563',
   },
-  popupActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
+  errorContainer: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#FFFBEB',
   },
-  primaryActionButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    gap: 8,
+  errorTitle: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    color: '#92400E',
+    marginTop: 16,
+    marginBottom: 8,
   },
-  actionButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#4B5563',
-  },
-  primaryActionButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+  errorText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#B45309',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
