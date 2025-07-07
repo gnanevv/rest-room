@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   Switch,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -100,10 +101,7 @@ export default function MapScreen() {
       } else {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert(
-            'Разрешение за локация',
-            'Нужен е достъп до локацията за да показваме най-близките тоалетни.'
-          );
+          console.log('Location permission not granted');
           return;
         }
 
