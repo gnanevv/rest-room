@@ -136,7 +136,7 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
     <View style={styles.container}>
       <MapView
         ref={mapViewRef}
-        provider={PROVIDER_GOOGLE}
+        provider={Platform.OS === 'ios' ? undefined : PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={mapStyle}
         initialRegion={

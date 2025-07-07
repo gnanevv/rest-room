@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar, Platform } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
 import {
@@ -39,7 +39,11 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar 
+        style="light" 
+        backgroundColor="transparent" 
+        translucent={Platform.OS === 'android'}
+      />
     </>
   );
 }

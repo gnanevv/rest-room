@@ -1,29 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  StyleSheet,
-  Alert,
-  Platform,
   Text,
-  TouchableOpacity,
+  StyleSheet,
+  Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { InteractiveMap } from '@/components/InteractiveMap';
+import { BlurView } from 'expo-blur';
+import { PremiumInteractiveMap } from '@/components/PremiumInteractiveMap';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
-import { MapPin, Layers, Filter } from 'lucide-react-native';
+import { Moon, Sun, MapPin, Zap } from 'lucide-react-native';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
   const [restrooms, setRestrooms] = useState<Restroom[]>(mockRestrooms);
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     getCurrentLocation();
+    loadThemePreference();
   }, []);
+
+  const loadThemePreference = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('darkMode');
+      if (savedTheme !== null) {
+        setIsDarkMode(JSON.parse(savedTheme));
+      }
+    } catch (error) {
+      console.log('Error loading theme preference:', error);
+    }
+  };
+
+  const toggleTheme = async () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    try {
+      await AsyncStorage.setItem('darkMode', JSON.stringify(newTheme));
+    } catch (error) {
+      console.log('Error saving theme preference:', error);
+    }
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -105,76 +127,66 @@ export default function MapScreen() {
     }
   };
 
-  const filteredRestrooms = restrooms.filter((restroom) => {
-    switch (selectedFilter) {
-      case 'available':
-        return restroom.availability === 'available';
-      case 'high_rated':
-        return restroom.rating >= 4.5;
-      case 'free':
-        return !restroom.isPaid;
-      case 'accessible':
-        return restroom.accessibility;
-      default:
-        return true;
-    }
-  });
-
   return (
-    <View style={styles.container}>
-      {/* Enhanced Header */}
-      <LinearGradient
-        colors={['#1E40AF', '#3B82F6', '#60A5FA']}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.headerTitleContainer}>
-            <MapPin size={32} color="#FFFFFF" strokeWidth={2} />
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Интерактивна карта</Text>
-              <Text style={styles.headerSubtitle}>
-                {filteredRestrooms.length} тоалетни в София
-              </Text>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000000' : '#F3F4F6' }]}>
+      {/* Premium Header */}
+      <View style={styles.headerContainer}>
+        <BlurView 
+          intensity={100} 
+          tint={isDarkMode ? 'dark' : 'light'} 
+          style={styles.headerBlur}
+        >
+          <LinearGradient
+            colors={isDarkMode 
+              ? ['rgba(0,0,0,0.8)', 'rgba(30,64,175,0.3)'] 
+              : ['rgba(255,255,255,0.8)', 'rgba(59,130,246,0.3)']
+            }
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <View style={styles.headerLeft}>
+                <View style={styles.logoContainer}>
+                  <LinearGradient
+                    colors={['#3B82F6', '#1E40AF']}
+                    style={styles.logoGradient}
+                  >
+                    <MapPin size={24} color="#FFFFFF" strokeWidth={2} />
+                  </LinearGradient>
+                </View>
+                <View>
+                  <Text style={[styles.headerTitle, { color: isDarkMode ? '#FFFFFF' : '#1F2937' }]}>
+                    Premium Map
+                  </Text>
+                  <View style={styles.headerSubtitleContainer}>
+                    <Zap size={12} color="#F59E0B" strokeWidth={2} />
+                    <Text style={[styles.headerSubtitle, { color: isDarkMode ? '#9CA3AF' : '#6B7280' }]}>
+                      {restrooms.length} locations • Live data
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.headerRight}>
+                <View style={styles.themeToggle}>
+                  <Sun size={16} color={isDarkMode ? '#6B7280' : '#F59E0B'} strokeWidth={2} />
+                  <Switch
+                    value={isDarkMode}
+                    onValueChange={toggleTheme}
+                    trackColor={{ false: '#E5E7EB', true: '#374151' }}
+                    thumbColor={isDarkMode ? '#3B82F6' : '#F3F4F6'}
+                    style={styles.switch}
+                  />
+                  <Moon size={16} color={isDarkMode ? '#3B82F6' : '#6B7280'} strokeWidth={2} />
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
+          </LinearGradient>
+        </BlurView>
+      </View>
 
-        {/* Quick Filter Buttons */}
-        <View style={styles.quickFilters}>
-          {[
-            { key: 'all', label: 'Всички', icon: Layers },
-            { key: 'available', label: 'Свободни', icon: MapPin },
-            { key: 'high_rated', label: 'Топ', icon: Filter },
-          ].map((filter) => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.quickFilterButton,
-                selectedFilter === filter.key && styles.quickFilterButtonActive,
-              ]}
-              onPress={() => setSelectedFilter(filter.key)}
-            >
-              <filter.icon
-                size={16}
-                color={selectedFilter === filter.key ? '#1E40AF' : '#FFFFFF'}
-                strokeWidth={2}
-              />
-              <Text
-                style={[
-                  styles.quickFilterText,
-                  selectedFilter === filter.key && styles.quickFilterTextActive,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </LinearGradient>
-
-      {/* Interactive Map */}
-      <InteractiveMap
-        restrooms={filteredRestrooms}
+      {/* Premium Interactive Map */}
+      <PremiumInteractiveMap
+        restrooms={restrooms}
         userLocation={
           location
             ? {
@@ -184,42 +196,6 @@ export default function MapScreen() {
             : undefined
         }
       />
-
-      {/* Map Legend */}
-      <View style={styles.legendContainer}>
-        <LinearGradient
-          colors={['#FFFFFF', '#F8FAFC']}
-          style={styles.legendGradient}
-        >
-          <Text style={styles.legendTitle}>Легенда</Text>
-          <View style={styles.legendItems}>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: '#10B981' }]}
-              />
-              <Text style={styles.legendText}>Отлично (4.5+)</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: '#3B82F6' }]}
-              />
-              <Text style={styles.legendText}>Добро (4.0+)</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: '#F59E0B' }]}
-              />
-              <Text style={styles.legendText}>Заето</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: '#EF4444' }]}
-              />
-              <Text style={styles.legendText}>Неработещо</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </View>
     </View>
   );
 }
@@ -227,106 +203,73 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
   },
-  header: {
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  headerBlur: {
     paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: 16,
+  },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  logoContainer: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  headerContent: {
-    marginBottom: 16,
-  },
-  headerTitleContainer: {
-    flexDirection: 'row',
+  logoGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
-    gap: 12,
-  },
-  headerTextContainer: {
-    flex: 1,
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
     marginBottom: 4,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#BFDBFE',
-  },
-  quickFilters: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  quickFilterButton: {
+  headerSubtitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     gap: 6,
   },
-  quickFilterButtonActive: {
-    backgroundColor: '#FFFFFF',
-  },
-  quickFilterText: {
+  headerSubtitle: {
     fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    fontFamily: 'Inter-Regular',
   },
-  quickFilterTextActive: {
-    color: '#1E40AF',
+  headerRight: {
+    alignItems: 'center',
   },
-  legendContainer: {
-    position: 'absolute',
-    bottom: 120,
-    left: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  legendGradient: {
-    padding: 16,
-    borderRadius: 16,
-    minWidth: 180,
-  },
-  legendTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  legendItems: {
-    gap: 8,
-  },
-  legendItem: {
+  themeToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  legendDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  legendText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    color: '#4B5563',
+  switch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
 });
