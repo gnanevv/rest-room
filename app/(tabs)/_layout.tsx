@@ -1,15 +1,38 @@
 import { Tabs } from 'expo-router';
 import { MapPin, Search, Heart, User, Map } from 'lucide-react-native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TabLayout() {
+  const systemColorScheme = useColorScheme();
+  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+
+  useEffect(() => {
+    loadThemePreference();
+  }, []);
+
+  const loadThemePreference = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('darkMode');
+      if (savedTheme !== null) {
+        setIsDarkMode(JSON.parse(savedTheme));
+      }
+    } catch (error) {
+      console.log('Error loading theme preference:', error);
+    }
+  };
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarStyle: [styles.tabBar, { 
+          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+          borderTopColor: isDarkMode ? '#374151' : '#E5E7EB',
+        }],
+        tabBarActiveTintColor: isDarkMode ? '#60A5FA' : '#3B82F6',
+        tabBarInactiveTintColor: isDarkMode ? '#6B7280' : '#9CA3AF',
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarItemStyle: styles.tabBarItem,
       }}>
@@ -64,9 +87,7 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     paddingVertical: 8,
     paddingHorizontal: 16,
     height: 88,
