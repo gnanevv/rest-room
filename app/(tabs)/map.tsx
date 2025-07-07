@@ -13,7 +13,7 @@ import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
 import { Moon, Sun, MapPin, Zap, Navigation, Star, Euro, Accessibility } from 'lucide-react-native';
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -156,26 +156,31 @@ export default function MapScreen() {
     loadThemePreference();
   }, []);
 
-  const loadThemePreference = async () => {
-    try {
-      const savedTheme = await AsyncStorage.getItem('darkMode');
+  const loadThemePreference = () => {
+    if (Platform.OS === 'web') {
+      const savedTheme = window.localStorage.getItem('darkMode');
       if (savedTheme !== null) {
         setIsDarkMode(JSON.parse(savedTheme));
+      } else {
+        setIsDarkMode(true); // Default to dark mode
       }
-    } catch (error) {
-      console.log('Error loading theme preference:', error);
+    } else {
+      setIsDarkMode(true); // Always dark mode on native, no persistence
     }
   };
 
-  const toggleTheme = async () => {
+
+
+  const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
-    try {
-      await AsyncStorage.setItem('darkMode', JSON.stringify(newTheme));
-    } catch (error) {
-      console.log('Error saving theme preference:', error);
+    if (Platform.OS === 'web') {
+      window.localStorage.setItem('darkMode', JSON.stringify(newTheme));
     }
+    // No-op for native
   };
+
+
 
   const getCurrentLocation = async () => {
     try {

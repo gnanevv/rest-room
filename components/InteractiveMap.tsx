@@ -17,7 +17,18 @@ import MapView, {
   Circle,
 } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { MapPin, Star, Navigation, ZoomIn, ZoomOut, Locate, X, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Accessibility } from 'lucide-react-native';
+import {
+  MapPin,
+  Star,
+  Navigation,
+  ZoomIn,
+  ZoomOut,
+  Locate,
+  X,
+  TriangleAlert as AlertTriangle,
+  CircleCheck as CheckCircle,
+  Accessibility,
+} from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 import mapStyle from '@/assets/map/map-style.json';
 
@@ -33,11 +44,17 @@ interface InteractiveMapProps {
 
 const { width, height } = Dimensions.get('window');
 
-export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps) {
+export function InteractiveMap({
+  restrooms,
+  userLocation,
+}: InteractiveMapProps) {
   const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(
     null
   );
-  const [routeDetails, setRouteDetails] = useState<{ distance: number, duration: number } | null>(null);
+  const [routeDetails, setRouteDetails] = useState<{
+    distance: number;
+    duration: number;
+  } | null>(null);
   const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
   const mapViewRef = useRef<MapView>(null);
 
@@ -115,7 +132,8 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
         <AlertTriangle size={48} color="#EF4444" />
         <Text style={styles.errorTitle}>API Key Missing</Text>
         <Text style={styles.errorText}>
-          Google Maps API key is not configured. Please add it to your .env file as EXPO_PUBLIC_GOOGLE_MAPS_API_KEY.
+          Google Maps API key is not configured. Please add it to your .env file
+          as EXPO_PUBLIC_GOOGLE_MAPS_API_KEY.
         </Text>
       </View>
     );
@@ -131,7 +149,12 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
         initialRegion={
           userLocation
             ? { ...userLocation, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }
-            : { latitude: 42.6977, longitude: 23.3219, latitudeDelta: 0.0922, longitudeDelta: 0.0421 } // Default to Sofia
+            : {
+                latitude: 42.6977,
+                longitude: 23.3219,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              } // Default to Sofia
         }
         showsUserLocation={false}
         showsMyLocationButton={false}
@@ -162,7 +185,12 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
             tracksViewChanges={false}
             anchor={{ x: 0.5, y: 1 }}
           >
-            <View style={[styles.restroomMarker, { backgroundColor: getMarkerColor(restroom) }]}>
+            <View
+              style={[
+                styles.restroomMarker,
+                { backgroundColor: getMarkerColor(restroom) },
+              ]}
+            >
               <MapPin size={20} color="white" />
             </View>
           </Marker>
@@ -175,7 +203,10 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
             apikey={GOOGLE_MAPS_API_KEY}
             strokeWidth={0} // Invisible
             onReady={(result) => {
-              setRouteDetails({ distance: result.distance, duration: result.duration });
+              setRouteDetails({
+                distance: result.distance,
+                duration: result.duration,
+              });
               setRouteCoordinates(result.coordinates);
             }}
           />
@@ -209,7 +240,7 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
             <X size={20} color="#6B7280" strokeWidth={2} />
           </TouchableOpacity>
           <View style={styles.popupContent}>
-            <Image 
+            <Image
               source={{ uri: 'https://via.placeholder.com/100' }} // Placeholder image
               style={styles.popupImage}
             />
@@ -217,15 +248,23 @@ export function InteractiveMap({ restrooms, userLocation }: InteractiveMapProps)
               <Text style={styles.popupTitle}>{selectedRestroom.name}</Text>
               <View style={styles.ratingContainer}>
                 <Star size={16} color="#F59E0B" fill="#F59E0B" />
-                <Text style={styles.ratingText}>{selectedRestroom.rating.toFixed(1)}</Text>
-                <Text style={styles.reviewCount}>({selectedRestroom.reviews.length} reviews)</Text>
+                <Text style={styles.ratingText}>
+                  {selectedRestroom.rating.toFixed(1)}
+                </Text>
+                <Text style={styles.reviewCount}>
+                  ({selectedRestroom.reviews.length} reviews)
+                </Text>
               </View>
               {routeDetails ? (
                 <Text style={styles.distanceText}>
                   {routeDetails.distance.toFixed(1)} km away
                 </Text>
               ) : (
-                <ActivityIndicator size="small" color="#3B82F6" style={{alignSelf: 'flex-start'}} />
+                <ActivityIndicator
+                  size="small"
+                  color="#3B82F6"
+                  style={{ alignSelf: 'flex-start' }}
+                />
               )}
             </View>
           </View>
