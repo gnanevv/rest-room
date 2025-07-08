@@ -12,13 +12,13 @@ interface SearchHeaderProps {
   onLocationPress: () => void;
   onSettingsPress: () => void;
 }
-
-export function SearchHeader({ 
   searchQuery, 
   onSearchChange, 
   onLocationPress, 
   onSettingsPress 
 }: SearchHeaderProps) {
+  const { colors, isDarkMode } = useTheme();
+
   const { colors, isDarkMode } = useTheme();
 
   return (
