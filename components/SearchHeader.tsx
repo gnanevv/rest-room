@@ -19,6 +19,10 @@ export function SearchHeader({
   onLocationPress, 
   onSettingsPress 
 }: SearchHeaderProps) {
+  const { isDarkMode, colors } = useTheme();
+  
+  return (
+    <View style={styles.container}>
       <LinearGradient
         colors={isDarkMode 
           ? ['rgba(15, 23, 42, 0.95)', 'rgba(30, 41, 59, 0.95)']
