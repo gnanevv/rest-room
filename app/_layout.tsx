@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -35,16 +36,18 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar 
-        style="light" 
-        backgroundColor="transparent" 
-        translucent={Platform.OS === 'android'}
-      />
-    </>
+    <ThemeProvider>
+      <>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar 
+          style="auto" 
+          backgroundColor="transparent" 
+          translucent={Platform.OS === 'android'}
+        />
+      </>
+    </ThemeProvider>
   );
 }

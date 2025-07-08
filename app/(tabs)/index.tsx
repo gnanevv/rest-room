@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, StatusBar } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 import { SearchHeader } from '@/components/SearchHeader';
 import { FilterBar } from '@/components/FilterBar';
 import { RestroomCard } from '@/components/RestroomCard';
@@ -8,6 +9,7 @@ import { Restroom } from '@/types/restroom';
 import * as Location from 'expo-location';
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(mockRestrooms);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -106,7 +108,8 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <SearchHeader
         searchQuery={searchQuery}
         onSearchChange={handleSearch}

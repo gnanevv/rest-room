@@ -1,11 +1,10 @@
 import { Tabs } from 'expo-router';
 import { MapPin, Search, Heart, User, Map } from 'lucide-react-native';
-import { StyleSheet, useColorScheme } from 'react-native';
-import { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
-  const systemColorScheme = useColorScheme();
-  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+  const { isDarkMode, colors } = useTheme();
 
   return (
     <Tabs
@@ -14,12 +13,12 @@ export default function TabLayout() {
         tabBarStyle: [
           styles.tabBar,
           {
-            backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-            borderTopColor: isDarkMode ? '#374151' : '#E5E7EB',
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
           },
         ],
-        tabBarActiveTintColor: isDarkMode ? '#60A5FA' : '#3B82F6',
-        tabBarInactiveTintColor: isDarkMode ? '#6B7280' : '#9CA3AF',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarItemStyle: styles.tabBarItem,
       }}

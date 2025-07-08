@@ -1,9 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { User, Star, MapPin, Camera, Settings, CircleHelp as HelpCircle, Share2, Award, Heart, MessageCircle, Bell, Shield } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function ProfileScreen() {
+  const { colors, isDarkMode } = useTheme();
+
   const userData = {
     name: 'Мария Иванова',
     level: 5,
@@ -93,80 +98,92 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#7C3AED', '#A855F7']}
-        style={styles.header}
-      >
-        <View style={styles.profileInfo}>
-          <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={['#FFFFFF', '#F3F4F6']}
-              style={styles.avatar}
-            >
-              <User size={48} color="#7C3AED" strokeWidth={2} />
-            </LinearGradient>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{userData.name}</Text>
-            <View style={styles.levelContainer}>
-              <Award size={16} color="#FEF3C7" strokeWidth={2} />
-              <Text style={styles.userLevel}>Ниво {userData.level}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
+      <View style={styles.headerContainer}>
+        <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.headerBlur}>
+          <LinearGradient
+            colors={isDarkMode 
+              ? ['rgba(124, 58, 237, 0.95)', 'rgba(168, 85, 247, 0.95)']
+              : ['rgba(124, 58, 237, 0.95)', 'rgba(168, 85, 247, 0.95)']
+            }
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <View style={styles.profileInfo}>
+                <View style={styles.avatarContainer}>
+                  <LinearGradient
+                    colors={['#FFFFFF', '#F3F4F6']}
+                    style={styles.avatar}
+                  >
+                    <User size={48} color="#7C3AED" strokeWidth={2} />
+                  </LinearGradient>
+                </View>
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{userData.name}</Text>
+                  <View style={styles.levelContainer}>
+                    <Award size={16} color="#FEF3C7" strokeWidth={2} />
+                    <Text style={styles.userLevel}>Ниво {userData.level}</Text>
+                  </View>
+                  <Text style={styles.joinDate}>Член от {userData.joinedDate}</Text>
+                </View>
+              </View>
+              <ThemeToggle size="small" />
             </View>
-            <Text style={styles.joinDate}>Член от {userData.joinedDate}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+          </LinearGradient>
+        </BlurView>
+      </View>
 
-      <View style={styles.statsContainer}>
+      <View style={[styles.statsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{userData.reviewCount}</Text>
-          <Text style={styles.statLabel}>Отзива</Text>
+          <Text style={[styles.statNumber, { color: colors.text }]}>{userData.reviewCount}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Отзива</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{userData.photosCount}</Text>
-          <Text style={styles.statLabel}>Снимки</Text>
+          <Text style={[styles.statNumber, { color: colors.text }]}>{userData.photosCount}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Снимки</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{userData.helpfulVotes}</Text>
-          <Text style={styles.statLabel}>Полезни гласа</Text>
+          <Text style={[styles.statNumber, { color: colors.text }]}>{userData.helpfulVotes}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Полезни гласа</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.menuContainer}>
+        <View style={[styles.menuContainer, { backgroundColor: colors.surface }]}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.menuItem}
+              style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
               onPress={item.onPress}
               activeOpacity={0.8}
             >
               <View style={styles.menuItemLeft}>
-                <View style={[styles.menuIcon, { backgroundColor: `${item.color}15` }]}>
+                <View style={[styles.menuIcon, { backgroundColor: isDarkMode ? `${item.color}30` : `${item.color}15` }]}>
                   <item.icon size={20} color={item.color} strokeWidth={2} />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
               </View>
-              {item.value && <Text style={styles.menuValue}>{item.value}</Text>}
+              {item.value && <Text style={[styles.menuValue, { color: colors.textSecondary }]}>{item.value}</Text>}
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.badgeContainer}>
-          <Text style={styles.badgeTitle}>Последни постижения</Text>
+        <View style={[styles.badgeContainer, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.badgeTitle, { color: colors.text }]}>Последни постижения</Text>
           <View style={styles.badgeRow}>
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
               <Star size={24} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
-              <Text style={styles.badgeText}>Първи отзив</Text>
+              <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Първи отзив</Text>
             </View>
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
               <Camera size={24} color="#8B5CF6" strokeWidth={2} />
-              <Text style={styles.badgeText}>Фотограф</Text>
+              <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Фотограф</Text>
             </View>
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
               <MessageCircle size={24} color="#10B981" strokeWidth={2} />
-              <Text style={styles.badgeText}>Полезен</Text>
+              <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Полезен</Text>
             </View>
           </View>
         </View>
@@ -180,12 +197,23 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
-  header: {
-    paddingTop: 60,
+  headerContainer: {
+    paddingTop: 44,
     paddingBottom: 24,
+  },
+  headerBlur: {
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  headerGradient: {
     paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   profileInfo: {
     flexDirection: 'row',
@@ -233,11 +261,9 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     paddingVertical: 20,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   statItem: {
     flex: 1,
@@ -246,19 +272,16 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
-    color: '#1F2937',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#6B7280',
   },
   scrollView: {
     flex: 1,
   },
   menuContainer: {
-    backgroundColor: '#FFFFFF',
     marginTop: 16,
     paddingHorizontal: 16,
   },
@@ -268,7 +291,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -285,15 +307,12 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#1F2937',
   },
   menuValue: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#6B7280',
   },
   badgeContainer: {
-    backgroundColor: '#FFFFFF',
     marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 20,
@@ -301,7 +320,6 @@ const styles = StyleSheet.create({
   badgeTitle: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: '#1F2937',
     marginBottom: 16,
   },
   badgeRow: {
@@ -311,17 +329,14 @@ const styles = StyleSheet.create({
   badge: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
     paddingVertical: 16,
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   badgeText: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#6B7280',
     marginTop: 8,
     textAlign: 'center',
   },

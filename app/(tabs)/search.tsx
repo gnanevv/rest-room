@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Search, MapPin, Filter, Star, Euro, Accessibility, Clock } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { RestroomCard } from '@/components/RestroomCard';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
 
 export default function SearchScreen() {
+  const { colors, isDarkMode } = useTheme();
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'cleanliness'>('distance');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -61,20 +65,34 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#1E40AF', '#3B82F6']}
-        style={styles.header}
-      >
-        <Text style={styles.title}>Търсене & Филтриране</Text>
-        <Text style={styles.subtitle}>Намери точно това, което търсиш</Text>
-      </LinearGradient>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
+      
+      <View style={styles.headerContainer}>
+        <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.headerBlur}>
+          <LinearGradient
+            colors={isDarkMode 
+              ? ['rgba(15, 23, 42, 0.95)', 'rgba(30, 41, 59, 0.95)']
+              : ['rgba(30, 64, 175, 0.95)', 'rgba(59, 130, 246, 0.95)']
+            }
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <View>
+                <Text style={styles.title}>Търсене & Филтриране</Text>
+                <Text style={styles.subtitle}>Намери точно това, което търсиш</Text>
+              </View>
+              <ThemeToggle size="small" />
+            </View>
+          </LinearGradient>
+        </BlurView>
+      </View>
 
-      <View style={styles.sortContainer}>
+      <View style={[styles.sortContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.sortHeader}>
-          <Text style={styles.sortTitle}>Сортиране по:</Text>
+          <Text style={[styles.sortTitle, { color: colors.text }]}>Сортиране по:</Text>
           <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
-            <Filter size={24} color="#6B7280" strokeWidth={2} />
+            <Filter size={24} color={colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortOptions}>
@@ -89,17 +107,22 @@ export default function SearchScreen() {
               style={[
                 styles.sortOption,
                 sortBy === key && styles.sortOptionActive,
+                { 
+                  backgroundColor: sortBy === key ? colors.primary : colors.surfaceVariant,
+                  borderColor: colors.border,
+                },
               ]}
             >
               <Icon
                 size={20}
-                color={sortBy === key ? '#FFFFFF' : '#6B7280'}
+                color={sortBy === key ? '#FFFFFF' : colors.textSecondary}
                 strokeWidth={2}
               />
               <Text
                 style={[
                   styles.sortOptionText,
                   sortBy === key && styles.sortOptionTextActive,
+                  { color: sortBy === key ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
                 {label}
@@ -110,11 +133,11 @@ export default function SearchScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.resultsHeader}>
-          <Text style={styles.resultsCount}>
+        <View style={[styles.resultsHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.resultsCount, { color: colors.text }]}>
             {sortedRestrooms.length} резултата
           </Text>
-          <Text style={styles.resultsSort}>
+          <Text style={[styles.resultsSort, { color: colors.textSecondary }]}>
             Сортирани по {sortBy === 'distance' ? 'разстояние' : sortBy === 'rating' ? 'рейтинг' : 'чистота'}
           </Text>
         </View>
@@ -135,12 +158,23 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
-  header: {
-    paddingTop: 60,
+  headerContainer: {
+    paddingTop: 44,
     paddingBottom: 24,
+  },
+  headerBlur: {
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  headerGradient: {
     paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
@@ -154,11 +188,9 @@ const styles = StyleSheet.create({
     color: '#BFDBFE',
   },
   sortContainer: {
-    backgroundColor: '#FFFFFF',
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   sortHeader: {
     flexDirection: 'row',
@@ -169,7 +201,6 @@ const styles = StyleSheet.create({
   sortTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#1F2937',
   },
   sortOptions: {
     flexDirection: 'row',
@@ -177,23 +208,16 @@ const styles = StyleSheet.create({
   sortOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 12,
     gap: 8,
-  },
-  sortOptionActive: {
-    backgroundColor: '#3B82F6',
+    borderWidth: 1,
   },
   sortOptionText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#6B7280',
-  },
-  sortOptionTextActive: {
-    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -201,20 +225,16 @@ const styles = StyleSheet.create({
   resultsHeader: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   resultsCount: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: '#1F2937',
     marginBottom: 4,
   },
   resultsSort: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#6B7280',
   },
   bottomPadding: {
     height: 100,

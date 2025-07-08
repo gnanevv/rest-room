@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, Star, Clock, Euro, Accessibility, Camera, Users } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import { MapPin, Star, Clock, Euro, Accessibility, Camera, Users, Navigation, Heart } from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface RestroomCardProps {
   restroom: Restroom;
@@ -12,6 +14,26 @@ interface RestroomCardProps {
 }
 
 export function RestroomCard({ restroom, onPress, onFavorite, isFavorite }: RestroomCardProps) {
+  const { colors, isDarkMode } = useTheme();
+  const scaleValue = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 8,
+    }).start();
+  };
   const getAvailabilityColor = () => {
     switch (restroom.availability) {
       case 'available': return '#10B981';
@@ -43,92 +65,122 @@ export function RestroomCard({ restroom, onPress, onFavorite, isFavorite }: Rest
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.gradient}
+    <Animated.View style={[styles.container, { transform: [{ scale: scaleValue }] }]}>
+      <TouchableOpacity 
+        onPress={onPress} 
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+        style={styles.touchable}
       >
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.name}>{restroom.name}</Text>
-            <View style={styles.locationRow}>
-              <MapPin size={14} color="#6B7280" strokeWidth={2} />
-              <Text style={styles.address}>{restroom.address}</Text>
+        <BlurView intensity={isDarkMode ? 20 : 10} tint={isDarkMode ? 'dark' : 'light'} style={styles.blur}>
+          <LinearGradient
+            colors={isDarkMode 
+              ? ['rgba(30, 41, 59, 0.8)', 'rgba(15, 23, 42, 0.8)']
+              : ['rgba(255, 255, 255, 0.9)', 'rgba(248, 250, 252, 0.9)']
+            }
+            style={[styles.gradient, { borderColor: colors.border }]}
+          >
+            <View style={styles.header}>
+              <View style={styles.headerLeft}>
+                <Text style={[styles.name, { color: colors.text }]}>{restroom.name}</Text>
+                <View style={styles.locationRow}>
+                  <MapPin size={14} color={colors.textSecondary} strokeWidth={2} />
+                  <Text style={[styles.address, { color: colors.textSecondary }]}>{restroom.address}</Text>
+                </View>
+              </View>
+              <View style={styles.headerRight}>
+                <View style={[styles.availabilityBadge, { backgroundColor: getAvailabilityColor() }]}>
+                  <Text style={styles.availabilityText}>{getAvailabilityText()}</Text>
+                </View>
+                {restroom.distance && (
+                  <Text style={[styles.distance, { color: colors.textTertiary }]}>{restroom.distance.toFixed(1)} км</Text>
+                )}
+              </View>
             </View>
-          </View>
-          <View style={styles.headerRight}>
-            <View style={[styles.availabilityBadge, { backgroundColor: getAvailabilityColor() }]}>
-              <Text style={styles.availabilityText}>{getAvailabilityText()}</Text>
-            </View>
-            {restroom.distance && (
-              <Text style={styles.distance}>{restroom.distance.toFixed(1)} км</Text>
-            )}
-          </View>
-        </View>
 
-        <View style={styles.metaRow}>
-          <View style={styles.ratingContainer}>
-            <Star size={16} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
-            <Text style={styles.rating}>{restroom.rating.toFixed(1)}</Text>
-            <Text style={styles.reviewCount}>({restroom.reviews.length})</Text>
-          </View>
-          
-          <View style={styles.businessType}>
-            <Text style={styles.businessTypeText}>{getBusinessTypeText()}</Text>
-          </View>
-        </View>
-
-        <View style={styles.amenitiesRow}>
-          {restroom.accessibility && (
-            <View style={styles.amenityBadge}>
-              <Accessibility size={14} color="#10B981" strokeWidth={2} />
+            <View style={styles.metaRow}>
+              <View style={styles.ratingContainer}>
+                <Star size={16} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
+                <Text style={[styles.rating, { color: colors.text }]}>{restroom.rating.toFixed(1)}</Text>
+                <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>({restroom.reviews.length})</Text>
+              </View>
+              
+              <View style={[styles.businessType, { backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.2)' : '#EBF8FF' }]}>
+                <Text style={[styles.businessTypeText, { color: colors.primary }]}>{getBusinessTypeText()}</Text>
+              </View>
             </View>
-          )}
-          {restroom.isPaid && (
-            <View style={styles.amenityBadge}>
-              <Euro size={14} color="#F59E0B" strokeWidth={2} />
-              <Text style={styles.priceText}>
-                {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
-              </Text>
-            </View>
-          )}
-          {restroom.photos.length > 0 && (
-            <View style={styles.amenityBadge}>
-              <Camera size={14} color="#6B7280" strokeWidth={2} />
-              <Text style={styles.photoCount}>{restroom.photos.length}</Text>
-            </View>
-          )}
-          <View style={styles.amenityBadge}>
-            <Users size={14} color="#6B7280" strokeWidth={2} />
-            <Text style={styles.checkInCount}>{restroom.checkInCount}</Text>
-          </View>
-        </View>
 
-        <View style={styles.cleanlinessRow}>
-          <Text style={styles.cleanlinessLabel}>Чистота:</Text>
-          <View style={styles.cleanlinessStars}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                size={12}
-                color={star <= restroom.cleanliness ? '#10B981' : '#E5E7EB'}
-                fill={star <= restroom.cleanliness ? '#10B981' : '#E5E7EB'}
-                strokeWidth={2}
-              />
-            ))}
-          </View>
-        </View>
+            <View style={styles.amenitiesRow}>
+              {restroom.accessibility && (
+                <View style={[styles.amenityBadge, { backgroundColor: colors.surfaceVariant }]}>
+                  <Accessibility size={14} color="#10B981" strokeWidth={2} />
+                </View>
+              )}
+              {restroom.isPaid && (
+                <View style={[styles.amenityBadge, { backgroundColor: colors.surfaceVariant }]}>
+                  <Euro size={14} color="#F59E0B" strokeWidth={2} />
+                  <Text style={[styles.priceText, { color: colors.textSecondary }]}>
+                    {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
+                  </Text>
+                </View>
+              )}
+              {restroom.photos.length > 0 && (
+                <View style={[styles.amenityBadge, { backgroundColor: colors.surfaceVariant }]}>
+                  <Camera size={14} color={colors.textSecondary} strokeWidth={2} />
+                  <Text style={[styles.photoCount, { color: colors.textSecondary }]}>{restroom.photos.length}</Text>
+                </View>
+              )}
+              <View style={[styles.amenityBadge, { backgroundColor: colors.surfaceVariant }]}>
+                <Users size={14} color={colors.textSecondary} strokeWidth={2} />
+                <Text style={[styles.checkInCount, { color: colors.textSecondary }]}>{restroom.checkInCount}</Text>
+              </View>
+            </View>
 
-        <View style={styles.footer}>
-          <View style={styles.lastUpdated}>
-            <Clock size={12} color="#9CA3AF" strokeWidth={2} />
-            <Text style={styles.lastUpdatedText}>
-              Обновено: {new Date(restroom.lastUpdated).toLocaleDateString('bg-BG')}
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+            <View style={styles.cleanlinessRow}>
+              <Text style={[styles.cleanlinessLabel, { color: colors.textSecondary }]}>Чистота:</Text>
+              <View style={styles.cleanlinessStars}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={12}
+                    color={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                    fill={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                    strokeWidth={2}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.footer}>
+              <View style={styles.lastUpdated}>
+                <Clock size={12} color={colors.textTertiary} strokeWidth={2} />
+                <Text style={[styles.lastUpdatedText, { color: colors.textTertiary }]}>
+                  Обновено: {new Date(restroom.lastUpdated).toLocaleDateString('bg-BG')}
+                </Text>
+              </View>
+              
+              <View style={styles.actionButtons}>
+                <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.primary }]}>
+                  <Navigation size={14} color="#FFFFFF" strokeWidth={2} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: isFavorite ? colors.error : colors.surfaceVariant }]}
+                  onPress={onFavorite}
+                >
+                  <Heart 
+                    size={14} 
+                    color={isFavorite ? "#FFFFFF" : colors.textSecondary} 
+                    fill={isFavorite ? "#FFFFFF" : "none"}
+                    strokeWidth={2} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </LinearGradient>
+        </BlurView>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
@@ -136,18 +188,23 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
     marginVertical: 8,
+  },
+  touchable: {
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    overflow: 'hidden',
+  },
+  blur: {
+    borderRadius: 16,
   },
   gradient: {
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   header: {
     flexDirection: 'row',
@@ -164,7 +221,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: '#1F2937',
     marginBottom: 4,
   },
   locationRow: {
@@ -175,7 +231,6 @@ const styles = StyleSheet.create({
   address: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#6B7280',
     flex: 1,
   },
   availabilityBadge: {
@@ -208,15 +263,12 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#1F2937',
   },
   reviewCount: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#6B7280',
   },
   businessType: {
-    backgroundColor: '#EBF8FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -224,7 +276,6 @@ const styles = StyleSheet.create({
   businessTypeText: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#3B82F6',
   },
   amenitiesRow: {
     flexDirection: 'row',
@@ -235,7 +286,6 @@ const styles = StyleSheet.create({
   amenityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -244,17 +294,14 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#F59E0B',
   },
   photoCount: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#6B7280',
   },
   checkInCount: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#6B7280',
   },
   cleanlinessRow: {
     flexDirection: 'row',
@@ -265,7 +312,6 @@ const styles = StyleSheet.create({
   cleanlinessLabel: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#4B5563',
   },
   cleanlinessStars: {
     flexDirection: 'row',
@@ -284,6 +330,16 @@ const styles = StyleSheet.create({
   lastUpdatedText: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#9CA3AF',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
