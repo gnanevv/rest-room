@@ -22,6 +22,7 @@ export function SearchHeader({
   const { isDarkMode, colors } = useTheme();
   
   return (
+    <>
     <View style={styles.container}>
       <LinearGradient
         colors={isDarkMode 
@@ -76,6 +77,7 @@ export function SearchHeader({
         </BlurView>
       </LinearGradient>
     </View>
+    </>
   );
 }
 
