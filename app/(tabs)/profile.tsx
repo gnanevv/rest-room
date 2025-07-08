@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { User, Star, MapPin, Camera, Settings, CircleHelp as HelpCircle, Share2, Award, Heart, MessageCircle, Bell, Shield } from 'lucide-react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function ProfileScreen() {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, theme } = useTheme();
 
   const userData = {
     name: 'Мария Иванова',
@@ -99,43 +97,34 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
-      <View style={styles.headerContainer}>
-        <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.headerBlur}>
-          <LinearGradient
-            colors={isDarkMode 
-              ? ['rgba(124, 58, 237, 0.95)', 'rgba(168, 85, 247, 0.95)']
-              : ['rgba(124, 58, 237, 0.95)', 'rgba(168, 85, 247, 0.95)']
-            }
-            style={styles.headerGradient}
-          >
-            <View style={styles.headerContent}>
-              <View style={styles.profileInfo}>
-                <View style={styles.avatarContainer}>
-                  <LinearGradient
-                    colors={['#FFFFFF', '#F3F4F6']}
-                    style={styles.avatar}
-                  >
-                    <User size={48} color="#7C3AED" strokeWidth={2} />
-                  </LinearGradient>
-                </View>
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{userData.name}</Text>
-                  <View style={styles.levelContainer}>
-                    <Award size={16} color="#FEF3C7" strokeWidth={2} />
-                    <Text style={styles.userLevel}>Ниво {userData.level}</Text>
-                  </View>
-                  <Text style={styles.joinDate}>Член от {userData.joinedDate}</Text>
-                </View>
-              </View>
-              <ThemeToggle size="small" />
+      <LinearGradient
+        colors={theme === 'light' ? ['#7C3AED', '#A855F7'] : ['#4F46E5', '#7C3AED']}
+        style={styles.header}
+      >
+        <View style={styles.profileInfo}>
+          <View style={styles.avatarContainer}>
+            <LinearGradient
+              colors={['#FFFFFF', '#F3F4F6']}
+              style={styles.avatar}
+            >
+              <User size={48} color="#7C3AED" strokeWidth={2} />
+            </LinearGradient>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{userData.name}</Text>
+            <View style={styles.levelContainer}>
+              <Award size={16} color="#FEF3C7" strokeWidth={2} />
+              <Text style={styles.userLevel}>Ниво {userData.level}</Text>
             </View>
-          </LinearGradient>
-        </BlurView>
-      </View>
+            <Text style={styles.joinDate}>Член от {userData.joinedDate}</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
-      <View style={[styles.statsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.statsContainer, { 
+        backgroundColor: colors.surface,
+        borderBottomColor: colors.border,
+      }]}>
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, { color: colors.text }]}>{userData.reviewCount}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Отзива</Text>
@@ -150,17 +139,20 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={[styles.scrollView, { backgroundColor: colors.background }]} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.menuContainer, { backgroundColor: colors.surface }]}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
+              style={[styles.menuItem, { borderBottomColor: colors.border }]}
               onPress={item.onPress}
               activeOpacity={0.8}
             >
               <View style={styles.menuItemLeft}>
-                <View style={[styles.menuIcon, { backgroundColor: isDarkMode ? `${item.color}30` : `${item.color}15` }]}>
+                <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
                   <item.icon size={20} color={item.color} strokeWidth={2} />
                 </View>
                 <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
@@ -173,15 +165,24 @@ export default function ProfileScreen() {
         <View style={[styles.badgeContainer, { backgroundColor: colors.surface }]}>
           <Text style={[styles.badgeTitle, { color: colors.text }]}>Последни постижения</Text>
           <View style={styles.badgeRow}>
-            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
+            <View style={[styles.badge, { 
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            }]}>
               <Star size={24} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
               <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Първи отзив</Text>
             </View>
-            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
+            <View style={[styles.badge, { 
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            }]}>
               <Camera size={24} color="#8B5CF6" strokeWidth={2} />
               <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Фотограф</Text>
             </View>
-            <View style={[styles.badge, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}>
+            <View style={[styles.badge, { 
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            }]}>
               <MessageCircle size={24} color="#10B981" strokeWidth={2} />
               <Text style={[styles.badgeText, { color: colors.textSecondary }]}>Полезен</Text>
             </View>
@@ -198,22 +199,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerContainer: {
-    paddingTop: 44,
+  header: {
+    paddingTop: 60,
     paddingBottom: 24,
-  },
-  headerBlur: {
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  headerGradient: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   profileInfo: {
     flexDirection: 'row',

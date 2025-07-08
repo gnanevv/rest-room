@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Search, MapPin, Filter, Star, Euro, Accessibility, Clock } from 'lucide-react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { RestroomCard } from '@/components/RestroomCard';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function SearchScreen() {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, theme } = useTheme();
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'cleanliness'>('distance');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -66,29 +64,18 @@ export default function SearchScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
-      
-      <View style={styles.headerContainer}>
-        <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.headerBlur}>
-          <LinearGradient
-            colors={isDarkMode 
-              ? ['rgba(15, 23, 42, 0.95)', 'rgba(30, 41, 59, 0.95)']
-              : ['rgba(30, 64, 175, 0.95)', 'rgba(59, 130, 246, 0.95)']
-            }
-            style={styles.headerGradient}
-          >
-            <View style={styles.headerContent}>
-              <View>
-                <Text style={styles.title}>Търсене & Филтриране</Text>
-                <Text style={styles.subtitle}>Намери точно това, което търсиш</Text>
-              </View>
-              <ThemeToggle size="small" />
-            </View>
-          </LinearGradient>
-        </BlurView>
-      </View>
+      <LinearGradient
+        colors={theme === 'light' ? ['#1E40AF', '#3B82F6'] : ['#7C3AED', '#8B5CF6']}
+        style={styles.header}
+      >
+        <Text style={styles.title}>Търсене & Филтриране</Text>
+        <Text style={styles.subtitle}>Намери точно това, което търсиш</Text>
+      </LinearGradient>
 
-      <View style={[styles.sortContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.sortContainer, { 
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+      }]}>
         <View style={styles.sortHeader}>
           <Text style={[styles.sortTitle, { color: colors.text }]}>Сортиране по:</Text>
           <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
@@ -106,23 +93,21 @@ export default function SearchScreen() {
               onPress={() => setSortBy(key as typeof sortBy)}
               style={[
                 styles.sortOption,
-                sortBy === key && styles.sortOptionActive,
                 { 
-                  backgroundColor: sortBy === key ? colors.primary : colors.surfaceVariant,
+                  backgroundColor: sortBy === key ? colors.primary : colors.surface,
                   borderColor: colors.border,
                 },
               ]}
             >
               <Icon
                 size={20}
-                color={sortBy === key ? '#FFFFFF' : colors.textSecondary}
+                color={sortBy === key ? colors.background : colors.textSecondary}
                 strokeWidth={2}
               />
               <Text
                 style={[
                   styles.sortOptionText,
-                  sortBy === key && styles.sortOptionTextActive,
-                  { color: sortBy === key ? '#FFFFFF' : colors.textSecondary },
+                  { color: sortBy === key ? colors.background : colors.textSecondary },
                 ]}
               >
                 {label}
@@ -132,8 +117,14 @@ export default function SearchScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={[styles.resultsHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <ScrollView 
+        style={[styles.scrollView, { backgroundColor: colors.background }]} 
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.resultsHeader, { 
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border,
+        }]}>
           <Text style={[styles.resultsCount, { color: colors.text }]}>
             {sortedRestrooms.length} резултата
           </Text>
@@ -159,22 +150,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerContainer: {
-    paddingTop: 44,
+  header: {
+    paddingTop: 60,
     paddingBottom: 24,
-  },
-  headerBlur: {
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  headerGradient: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   title: {
     fontSize: 28,

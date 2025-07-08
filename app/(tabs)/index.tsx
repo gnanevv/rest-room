@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, StatusBar } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SearchHeader } from '@/components/SearchHeader';
 import { FilterBar } from '@/components/FilterBar';
 import { RestroomCard } from '@/components/RestroomCard';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
+import { useTheme } from '@/hooks/useTheme';
 import * as Location from 'expo-location';
 
 export default function HomeScreen() {
@@ -109,7 +109,6 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <SearchHeader
         searchQuery={searchQuery}
         onSearchChange={handleSearch}
@@ -117,7 +116,10 @@ export default function HomeScreen() {
         onSettingsPress={handleSettingsPress}
       />
       <FilterBar onFilterChange={handleFilterChange} />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={[styles.scrollView, { backgroundColor: colors.background }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {filteredRestrooms.map((restroom) => (
           <RestroomCard
             key={restroom.id}
@@ -134,7 +136,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   scrollView: {
     flex: 1,

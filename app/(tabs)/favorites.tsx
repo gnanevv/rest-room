@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Heart, Star, MapPin } from 'lucide-react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { RestroomCard } from '@/components/RestroomCard';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function FavoritesScreen() {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, theme } = useTheme();
   // For demo purposes, we'll use the top-rated restrooms as favorites
   const [favorites, setFavorites] = useState<Restroom[]>(
     mockRestrooms.filter(restroom => restroom.rating >= 4.5)
@@ -47,39 +45,30 @@ export default function FavoritesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
-      <View style={styles.headerContainer}>
-        <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.headerBlur}>
-          <LinearGradient
-            colors={isDarkMode 
-              ? ['rgba(220, 38, 38, 0.95)', 'rgba(239, 68, 68, 0.95)']
-              : ['rgba(220, 38, 38, 0.95)', 'rgba(239, 68, 68, 0.95)']
-            }
-            style={styles.headerGradient}
-          >
-            <View style={styles.headerContent}>
-              <View style={styles.headerLeft}>
-                <Heart size={32} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
-                <View style={styles.headerText}>
-                  <Text style={styles.title}>Любими места</Text>
-                  <Text style={styles.subtitle}>Твоите избрани тоалетни</Text>
-                </View>
-              </View>
-              <ThemeToggle size="small" />
-            </View>
-          </LinearGradient>
-        </BlurView>
-      </View>
+      <LinearGradient
+        colors={theme === 'light' ? ['#DC2626', '#EF4444'] : ['#7C3AED', '#8B5CF6']}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <Heart size={32} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Любими места</Text>
+            <Text style={styles.subtitle}>Твоите избрани тоалетни</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
-      <View style={[styles.statsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.statsContainer, { 
+        backgroundColor: colors.surface,
+        borderBottomColor: colors.border,
+      }]}>
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, { color: colors.text }]}>{favorites.length}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Любими</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, { color: colors.text }]}>
-            {(favorites.reduce((sum, restroom) => sum + restroom.rating, 0) / favorites.length || 0).toFixed(1)}
+            {favorites.reduce((sum, restroom) => sum + restroom.rating, 0) / favorites.length || 0}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ср. рейтинг</Text>
         </View>
@@ -91,7 +80,10 @@ export default function FavoritesScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={[styles.scrollView, { backgroundColor: colors.background }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {favorites.length === 0 ? (
           <View style={styles.emptyState}>
             <Heart size={64} color={colors.border} strokeWidth={1} />
@@ -121,24 +113,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerContainer: {
-    paddingTop: 44,
+  header: {
+    paddingTop: 60,
     paddingBottom: 24,
-  },
-  headerBlur: {
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  headerGradient: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
