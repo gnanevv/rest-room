@@ -57,7 +57,7 @@ export function RestroomBottomSheet({
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
-        useNativeDriver: true,
+        useNativeDriver: false,
         tension: 100,
         friction: 8,
       }),
@@ -107,7 +107,7 @@ export function RestroomBottomSheet({
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: screenHeight - EXPANDED_HEIGHT,
-        useNativeDriver: true,
+        useNativeDriver: false,
         tension: 100,
         friction: 8,
       }),
@@ -125,7 +125,7 @@ export function RestroomBottomSheet({
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
-        useNativeDriver: true,
+        useNativeDriver: false,
         tension: 100,
         friction: 8,
       }),
@@ -141,7 +141,7 @@ export function RestroomBottomSheet({
   const closeSheet = () => {
     Animated.spring(translateY, {
       toValue: screenHeight,
-      useNativeDriver: true,
+      useNativeDriver: false,
       tension: 100,
       friction: 8,
     }).start(() => {
