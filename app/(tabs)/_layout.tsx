@@ -20,7 +20,7 @@ export default function TabLayout() {
         tabBarItemStyle: styles.tabBarItem,
       }}>
       <Tabs.Screen
-        name="map"
+        name="index"
         options={{
           title: 'Карта',
           tabBarIcon: ({ size, color }) => (
@@ -44,7 +44,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="list"
         options={{
           title: 'Списък',
           tabBarIcon: ({ size, color }) => (
