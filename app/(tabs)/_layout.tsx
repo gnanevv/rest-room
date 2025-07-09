@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { MapPin, List as ListIcon, PlusCircle } from 'lucide-react-native';
+import { MapPin, List as ListIcon, CirclePlus as PlusCircle } from 'lucide-react-native';
 import { StyleSheet } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 
