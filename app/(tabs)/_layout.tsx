@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { MapPin, Search, Heart, User, Map } from 'lucide-react-native';
+import { MapPin, List as ListIcon, PlusCircle } from 'lucide-react-native';
 import { StyleSheet } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -20,47 +20,35 @@ export default function TabLayout() {
         tabBarItemStyle: styles.tabBarItem,
       }}>
       <Tabs.Screen
-        name="index"
+        name="map"
         options={{
-          title: 'Начало',
+          title: 'Карта',
           tabBarIcon: ({ size, color }) => (
             <MapPin size={size} color={color} strokeWidth={2} />
           ),
         }}
       />
       <Tabs.Screen
-        name="map"
+        name="add"
         options={{
-          title: 'Карта',
+          title: 'Добави',
+          tabBarLabelStyle: { display: 'none' },
           tabBarIcon: ({ size, color }) => (
-            <Map size={size} color={color} strokeWidth={2} />
+            <PlusCircle
+              size={size + 6}
+              color={color}
+              strokeWidth={2}
+              style={{ marginBottom: -6 }}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Търсене',
+          title: 'Списък',
           tabBarIcon: ({ size, color }) => (
-            <Search size={size} color={color} strokeWidth={2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="favorites"
-        options={{
-          title: 'Любими',
-          tabBarIcon: ({ size, color }) => (
-            <Heart size={size} color={color} strokeWidth={2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Профил',
-          tabBarIcon: ({ size, color }) => (
-            <User size={size} color={color} strokeWidth={2} />
+            <ListIcon size={size} color={color} strokeWidth={2} />
           ),
         }}
       />
