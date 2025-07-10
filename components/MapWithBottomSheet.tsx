@@ -2,52 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import {
   View,
-  Text,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Animated,
   Platform,
-  ScrollView,
-  Alert,
   StatusBar,
-  PanResponder,
-  TextInput,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import * as Location from 'expo-location';
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
 import {
-  MapPin,
-  Star,
-  Euro,
-  Accessibility,
-  Navigation,
   ZoomIn,
   ZoomOut,
   Locate,
-  X,
-  Filter,
-  Layers,
-  Search,
-  Heart,
-  Camera,
-  Clock,
-  Users,
-  ChevronDown,
-  ArrowLeft,
-  Share,
-  Bookmark,
-  Route,
-  Navigation2,
-  ChevronUp,
-  Eye,
-  Target,
-  Settings,
-  Menu,
 } from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 import { useTheme } from '@/hooks/useTheme';
@@ -63,7 +31,7 @@ interface MapWithBottomSheetProps {
 }
 
 const { width, height } = Dimensions.get('window');
-const INITIAL_DELTA = 0.02; // ~1-2km
+const INITIAL_DELTA = 0.02;
 
 export function MapWithBottomSheet({
   restrooms,
@@ -77,7 +45,6 @@ export function MapWithBottomSheet({
   const mapRef = useRef<MapView | null>(null);
 
   useEffect(() => {
-    // Filter restrooms based on search query
     if (searchQuery.trim() === '') {
       setFilteredRestrooms(restrooms);
     } else {
@@ -91,6 +58,7 @@ export function MapWithBottomSheet({
   }, [searchQuery, restrooms]);
 
   const handleMarkerPress = (restroom: Restroom) => {
+    console.log('Marker pressed:', restroom.name);
     setSelectedRestroom(restroom);
   };
 
@@ -135,15 +103,9 @@ export function MapWithBottomSheet({
     const { latitude, longitude } = restroom.coordinates;
 
     if (Platform.OS === 'ios') {
-      Alert.alert(
-        'Навигация',
-        `Отваряне на Apple Maps към ${restroom.name}...`
-      );
+      console.log(`Opening Apple Maps to ${restroom.name}...`);
     } else if (Platform.OS === 'android') {
-      Alert.alert(
-        'Навигация',
-        `Отваряне на Google Maps към ${restroom.name}...`
-      );
+      console.log(`Opening Google Maps to ${restroom.name}...`);
     } else {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
       if (typeof window !== 'undefined') {
@@ -152,7 +114,6 @@ export function MapWithBottomSheet({
     }
   };
 
-  // Floating Map Controls
   const FloatingMapControls = () => (
     <View style={styles.mapControls}>
       <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>

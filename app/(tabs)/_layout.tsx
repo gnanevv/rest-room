@@ -32,14 +32,8 @@ export default function TabLayout() {
         name="add"
         options={{
           title: 'Добави',
-          tabBarLabelStyle: { display: 'none' },
           tabBarIcon: ({ size, color }) => (
-            <Plus
-              size={size + 6}
-              color={color}
-              strokeWidth={2}
-              style={{ marginBottom: -6 }}
-            />
+            <Plus size={size + 4} color={color} strokeWidth={2.5} />
           ),
         }}
       />

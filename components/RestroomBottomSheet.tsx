@@ -23,10 +23,12 @@ import {
   X,
   Heart,
   Share,
-  Phone,
-  Globe,
   ChevronUp,
   ChevronDown,
+  Key,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useTheme';
@@ -39,8 +41,8 @@ interface RestroomBottomSheetProps {
 }
 
 const { height: screenHeight } = Dimensions.get('window');
-const COLLAPSED_HEIGHT = 200;
-const EXPANDED_HEIGHT = screenHeight * 0.8;
+const COLLAPSED_HEIGHT = 280;
+const EXPANDED_HEIGHT = screenHeight * 0.85;
 
 export function RestroomBottomSheet({
   restroom,
@@ -53,18 +55,18 @@ export function RestroomBottomSheet({
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   useEffect(() => {
-    // Animate in
+    // Animate in with spring effect
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
       Animated.spring(sheetHeight, {
         toValue: COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
     ]).start();
@@ -84,14 +86,11 @@ export function RestroomBottomSheet({
       const velocity = gestureState.vy;
       const currentY = (translateY as any)._value;
       
-      if (velocity > 0.5 || currentY > screenHeight - COLLAPSED_HEIGHT / 2) {
-        // Close sheet
+      if (velocity > 0.8 || currentY > screenHeight - COLLAPSED_HEIGHT / 2) {
         closeSheet();
-      } else if (velocity < -0.5 || currentY < screenHeight - EXPANDED_HEIGHT / 2) {
-        // Expand sheet
+      } else if (velocity < -0.8 || currentY < screenHeight - EXPANDED_HEIGHT / 2) {
         expandSheet();
       } else {
-        // Snap to nearest position
         const midPoint = screenHeight - (COLLAPSED_HEIGHT + EXPANDED_HEIGHT) / 2;
         if (currentY > midPoint) {
           collapseSheet();
@@ -108,13 +107,13 @@ export function RestroomBottomSheet({
       Animated.spring(translateY, {
         toValue: screenHeight - EXPANDED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
       Animated.spring(sheetHeight, {
         toValue: EXPANDED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
     ]).start();
@@ -126,13 +125,13 @@ export function RestroomBottomSheet({
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
       Animated.spring(sheetHeight, {
         toValue: COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 100,
+        tension: 80,
         friction: 8,
       }),
     ]).start();
@@ -142,42 +141,52 @@ export function RestroomBottomSheet({
     Animated.spring(translateY, {
       toValue: screenHeight,
       useNativeDriver: false,
-      tension: 100,
+      tension: 80,
       friction: 8,
     }).start(() => {
       onClose();
     });
   };
 
-  const getAvailabilityColor = () => {
-    switch (restroom.availability) {
-      case 'available': return colors.success;
-      case 'occupied': return colors.warning;
-      case 'out_of_order': return colors.error;
-      default: return colors.secondary;
+  const getStatusBadge = () => {
+    const { availability, rating } = restroom;
+    
+    if (availability === 'out_of_order') {
+      return {
+        icon: XCircle,
+        text: 'Неработещо',
+        colors: ['#EF4444', '#DC2626'],
+        textColor: '#FFFFFF'
+      };
     }
+    
+    if (availability === 'occupied') {
+      return {
+        icon: AlertTriangle,
+        text: 'Заето',
+        colors: ['#F59E0B', '#D97706'],
+        textColor: '#FFFFFF'
+      };
+    }
+    
+    if (rating < 3) {
+      return {
+        icon: AlertTriangle,
+        text: 'Лош рейтинг',
+        colors: ['#EF4444', '#DC2626'],
+        textColor: '#FFFFFF'
+      };
+    }
+    
+    return {
+      icon: CheckCircle,
+      text: 'Свободно',
+      colors: ['#10B981', '#059669'],
+      textColor: '#FFFFFF'
+    };
   };
 
-  const getAvailabilityText = () => {
-    switch (restroom.availability) {
-      case 'available': return 'Свободно';
-      case 'occupied': return 'Заето';
-      case 'out_of_order': return 'Неработещо';
-      default: return 'Неизвестно';
-    }
-  };
-
-  const getBusinessTypeText = () => {
-    switch (restroom.businessType) {
-      case 'restaurant': return 'Ресторант';
-      case 'cafe': return 'Кафе';
-      case 'bar': return 'Бар';
-      case 'public': return 'Обществено';
-      case 'gas_station': return 'Бензиностанция';
-      case 'mall': return 'Мол';
-      default: return 'Други';
-    }
-  };
+  const statusBadge = getStatusBadge();
 
   return (
     <Animated.View
@@ -191,250 +200,260 @@ export function RestroomBottomSheet({
       {...panResponder.panHandlers}
     >
       <BlurView
-        intensity={theme === 'light' ? 90 : 70}
+        intensity={theme === 'light' ? 95 : 80}
         style={styles.blur}
       >
-        <View
-          style={[
-            styles.content,
-            { backgroundColor: colors.surface },
-          ]}
+        <LinearGradient
+          colors={theme === 'light' 
+            ? ['rgba(255,255,255,0.95)', 'rgba(248,250,252,0.98)']
+            : ['rgba(15,23,42,0.95)', 'rgba(30,41,59,0.98)']
+          }
+          style={styles.gradient}
         >
-          {/* Handle */}
-          <View style={styles.handleContainer}>
-            <View
-              style={[
-                styles.handle,
-                { backgroundColor: colors.border },
-              ]}
-            />
-          </View>
-
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <View
-                style={[
-                  styles.statusIndicator,
-                  { backgroundColor: getAvailabilityColor() },
-                ]}
-              />
-              <View style={styles.headerText}>
-                <Text style={[styles.title, { color: colors.text }]}>
-                  {restroom.name}
-                </Text>
-                <View style={styles.addressRow}>
-                  <MapPin size={14} color={colors.textSecondary} strokeWidth={2} />
-                  <Text style={[styles.address, { color: colors.textSecondary }]}>
-                    {restroom.address}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[styles.closeButton, { backgroundColor: colors.background }]}
-              onPress={closeSheet}
-            >
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Quick Info */}
-          <View style={styles.quickInfo}>
-            <View style={styles.ratingContainer}>
-              <Star size={16} color={colors.warning} fill={colors.warning} strokeWidth={2} />
-              <Text style={[styles.rating, { color: colors.text }]}>
-                {restroom.rating.toFixed(1)}
-              </Text>
-              <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>
-                ({restroom.reviews.length})
-              </Text>
+          <View style={styles.content}>
+            {/* Drag Handle */}
+            <View style={styles.handleContainer}>
+              <View style={[styles.handle, { backgroundColor: colors.border }]} />
             </View>
 
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getAvailabilityColor() },
-              ]}
-            >
-              <Text style={styles.statusText}>{getAvailabilityText()}</Text>
-            </View>
-
-            {restroom.distance && (
-              <Text style={[styles.distance, { color: colors.textSecondary }]}>
-                {restroom.distance.toFixed(1)} км
-              </Text>
-            )}
-          </View>
-
-          {/* Amenities */}
-          <View style={styles.amenities}>
-            {restroom.accessibility && (
-              <View style={[styles.amenityBadge, { backgroundColor: colors.background }]}>
-                <Accessibility size={14} color={colors.success} strokeWidth={2} />
-                <Text style={[styles.amenityText, { color: colors.success }]}>
-                  Достъпно
-                </Text>
-              </View>
-            )}
-            {restroom.isPaid && (
-              <View style={[styles.amenityBadge, { backgroundColor: colors.background }]}>
-                <Euro size={14} color={colors.warning} strokeWidth={2} />
-                <Text style={[styles.amenityText, { color: colors.warning }]}>
-                  {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
-                </Text>
-              </View>
-            )}
-            <View style={[styles.amenityBadge, { backgroundColor: colors.background }]}>
-              <Users size={14} color={colors.textSecondary} strokeWidth={2} />
-              <Text style={[styles.amenityText, { color: colors.textSecondary }]}>
-                {restroom.checkInCount}
-              </Text>
-            </View>
-            {restroom.photos.length > 0 && (
-              <View style={[styles.amenityBadge, { backgroundColor: colors.background }]}>
-                <Camera size={14} color={colors.textSecondary} strokeWidth={2} />
-                <Text style={[styles.amenityText, { color: colors.textSecondary }]}>
-                  {restroom.photos.length}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.background }]}
-            >
-              <Heart size={16} color={colors.error} strokeWidth={2} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.background }]}
-            >
-              <Share size={16} color={colors.textSecondary} strokeWidth={2} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-              onPress={onNavigate}
-            >
-              <Navigation2 size={16} color={colors.background} strokeWidth={2} />
-              <Text style={[styles.primaryButtonText, { color: colors.background }]}>
-                Навигация
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Expandable Content */}
-          {isExpanded && (
-            <ScrollView
-              style={styles.expandedContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Business Type */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Тип заведение
-                </Text>
-                <View style={[styles.businessTypeBadge, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.businessTypeText, { color: colors.primary }]}>
-                    {getBusinessTypeText()}
+            {/* Header with glassmorphism */}
+            <View style={styles.header}>
+              <View style={styles.headerLeft}>
+                <LinearGradient
+                  colors={statusBadge.colors}
+                  style={styles.statusIndicator}
+                >
+                  <statusBadge.icon size={12} color="#FFFFFF" strokeWidth={2.5} />
+                </LinearGradient>
+                <View style={styles.headerText}>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {restroom.name}
                   </Text>
-                </View>
-              </View>
-
-              {/* Cleanliness Rating */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Чистота
-                </Text>
-                <View style={styles.cleanlinessRow}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={16}
-                      color={star <= restroom.cleanliness ? colors.success : colors.border}
-                      fill={star <= restroom.cleanliness ? colors.success : colors.border}
-                      strokeWidth={2}
-                    />
-                  ))}
-                  <Text style={[styles.cleanlinessText, { color: colors.textSecondary }]}>
-                    {restroom.cleanliness}/5
-                  </Text>
-                </View>
-              </View>
-
-              {/* Photos */}
-              {restroom.photos.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                    Снимки
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={styles.photosContainer}>
-                      {restroom.photos.map((photo, index) => (
-                        <Image
-                          key={index}
-                          source={{ uri: photo }}
-                          style={styles.photo}
-                        />
-                      ))}
-                    </View>
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* Recent Reviews */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Последни отзиви
-                </Text>
-                {restroom.reviews.slice(0, 3).map((review) => (
-                  <View
-                    key={review.id}
-                    style={[styles.reviewItem, { borderBottomColor: colors.border }]}
-                  >
-                    <View style={styles.reviewHeader}>
-                      <Text style={[styles.reviewAuthor, { color: colors.text }]}>
-                        {review.userName}
-                      </Text>
-                      <View style={styles.reviewRating}>
-                        <Star size={12} color={colors.warning} fill={colors.warning} strokeWidth={2} />
-                        <Text style={[styles.reviewRatingText, { color: colors.textSecondary }]}>
-                          {review.rating}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>
-                      {review.comment}
+                  <View style={styles.addressRow}>
+                    <MapPin size={14} color={colors.textSecondary} strokeWidth={2} />
+                    <Text style={[styles.address, { color: colors.textSecondary }]}>
+                      {restroom.address}
                     </Text>
                   </View>
-                ))}
-              </View>
-
-              {/* Last Updated */}
-              <View style={styles.section}>
-                <View style={styles.lastUpdated}>
-                  <Clock size={14} color={colors.textTertiary} strokeWidth={2} />
-                  <Text style={[styles.lastUpdatedText, { color: colors.textTertiary }]}>
-                    Обновено: {new Date(restroom.lastUpdated).toLocaleDateString('bg-BG')}
-                  </Text>
                 </View>
               </View>
-            </ScrollView>
-          )}
+              <TouchableOpacity
+                style={[styles.closeButton, { backgroundColor: `${colors.background}80` }]}
+                onPress={closeSheet}
+              >
+                <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
 
-          {/* Expand/Collapse Indicator */}
-          <TouchableOpacity
-            style={styles.expandIndicator}
-            onPress={isExpanded ? collapseSheet : expandSheet}
-          >
-            {isExpanded ? (
-              <ChevronDown size={20} color={colors.textSecondary} strokeWidth={2} />
-            ) : (
-              <ChevronUp size={20} color={colors.textSecondary} strokeWidth={2} />
+            {/* Premium Status Badges */}
+            <View style={styles.badgeContainer}>
+              <LinearGradient
+                colors={statusBadge.colors}
+                style={styles.statusBadge}
+              >
+                <statusBadge.icon size={14} color="#FFFFFF" strokeWidth={2} />
+                <Text style={[styles.statusText, { color: statusBadge.textColor }]}>
+                  {statusBadge.text}
+                </Text>
+              </LinearGradient>
+
+              {restroom.isPaid && (
+                <LinearGradient
+                  colors={['#F59E0B', '#D97706']}
+                  style={styles.statusBadge}
+                >
+                  <Euro size={14} color="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.statusText}>
+                    {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
+                  </Text>
+                </LinearGradient>
+              )}
+
+              {restroom.accessibility && (
+                <LinearGradient
+                  colors={['#10B981', '#059669']}
+                  style={styles.statusBadge}
+                >
+                  <Accessibility size={14} color="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.statusText}>Достъпно</Text>
+                </LinearGradient>
+              )}
+
+              {restroom.businessType === 'private' && (
+                <LinearGradient
+                  colors={['#8B5CF6', '#7C3AED']}
+                  style={styles.statusBadge}
+                >
+                  <Key size={14} color="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.statusText}>Нужен ключ</Text>
+                </LinearGradient>
+              )}
+            </View>
+
+            {/* Rating & Distance */}
+            <View style={styles.metaRow}>
+              <View style={styles.ratingContainer}>
+                <LinearGradient
+                  colors={['#F59E0B', '#D97706']}
+                  style={styles.ratingBadge}
+                >
+                  <Star size={16} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.ratingText}>{restroom.rating.toFixed(1)}</Text>
+                </LinearGradient>
+                <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>
+                  ({restroom.reviews.length} отзива)
+                </Text>
+              </View>
+
+              {restroom.distance && (
+                <View style={[styles.distanceBadge, { backgroundColor: `${colors.primary}20` }]}>
+                  <Text style={[styles.distanceText, { color: colors.primary }]}>
+                    {restroom.distance.toFixed(1)} км
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Action Buttons with glassmorphism */}
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
+              >
+                <Heart size={18} color={colors.error} strokeWidth={2} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: `${colors.textSecondary}15` }]}
+              >
+                <Share size={18} color={colors.textSecondary} strokeWidth={2} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={onNavigate}
+              >
+                <LinearGradient
+                  colors={['#3B82F6', '#1E40AF']}
+                  style={styles.primaryGradient}
+                >
+                  <Navigation2 size={18} color="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.primaryButtonText}>Навигация</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Expandable Content */}
+            {isExpanded && (
+              <ScrollView
+                style={styles.expandedContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Cleanliness Rating */}
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    Чистота и качество
+                  </Text>
+                  <View style={styles.cleanlinessRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={20}
+                        color={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                        fill={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                        strokeWidth={2}
+                      />
+                    ))}
+                    <Text style={[styles.cleanlinessText, { color: colors.text }]}>
+                      {restroom.cleanliness}/5
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Amenities */}
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    Удобства
+                  </Text>
+                  <View style={styles.amenitiesGrid}>
+                    {restroom.amenities.map((amenity, index) => (
+                      <View
+                        key={index}
+                        style={[styles.amenityChip, { backgroundColor: `${colors.primary}15` }]}
+                      >
+                        <Text style={[styles.amenityText, { color: colors.primary }]}>
+                          {amenity}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Photos */}
+                {restroom.photos.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Снимки
+                    </Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={styles.photosContainer}>
+                        {restroom.photos.map((photo, index) => (
+                          <Image
+                            key={index}
+                            source={{ uri: photo }}
+                            style={styles.photo}
+                          />
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* Recent Reviews */}
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    Последни отзиви
+                  </Text>
+                  {restroom.reviews.slice(0, 3).map((review) => (
+                    <View
+                      key={review.id}
+                      style={[styles.reviewItem, { 
+                        backgroundColor: `${colors.surface}50`,
+                        borderColor: `${colors.border}30`
+                      }]}
+                    >
+                      <View style={styles.reviewHeader}>
+                        <Text style={[styles.reviewAuthor, { color: colors.text }]}>
+                          {review.userName}
+                        </Text>
+                        <View style={styles.reviewRating}>
+                          <Star size={12} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
+                          <Text style={[styles.reviewRatingText, { color: colors.textSecondary }]}>
+                            {review.rating}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>
+                        {review.comment}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
             )}
-          </TouchableOpacity>
-        </View>
+
+            {/* Expand/Collapse Indicator */}
+            <TouchableOpacity
+              style={styles.expandIndicator}
+              onPress={isExpanded ? collapseSheet : expandSheet}
+            >
+              <View style={[styles.expandButton, { backgroundColor: `${colors.primary}20` }]}>
+                {isExpanded ? (
+                  <ChevronDown size={20} color={colors.primary} strokeWidth={2.5} />
+                ) : (
+                  <ChevronUp size={20} color={colors.primary} strokeWidth={2.5} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </BlurView>
     </Animated.View>
   );
@@ -446,207 +465,254 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 16,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 24,
   },
   blur: {
     flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+  },
+  gradient: {
+    flex: 1,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
   handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 48,
+    height: 5,
+    borderRadius: 3,
+    opacity: 0.3,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     flex: 1,
-    marginRight: 12,
+    marginRight: 16,
   },
   statusIndicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 2,
     marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   address: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Regular',
     flex: 1,
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    backdropFilter: 'blur(10px)',
   },
-  quickInfo: {
+  badgeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  statusText: {
+    fontSize: 13,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+  },
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  rating: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-  },
-  reviewCount: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-  },
-  distance: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-  },
-  amenities: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 20,
   },
-  amenityBadge: {
+  ratingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
     gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  amenityText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
+  ratingText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  reviewCount: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+  },
+  distanceBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  distanceText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
   actions: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   actionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    backdropFilter: 'blur(10px)',
   },
   primaryButton: {
     flex: 1,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  primaryGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     gap: 8,
   },
   primaryButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
   },
   expandedContent: {
     flex: 1,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    marginBottom: 12,
-  },
-  businessTypeBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  businessTypeText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    marginBottom: 16,
   },
   cleanlinessRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   cleanlinessText: {
-    fontSize: 14,
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    marginLeft: 12,
+  },
+  amenitiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  amenityChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backdropFilter: 'blur(10px)',
+  },
+  amenityText: {
+    fontSize: 13,
     fontFamily: 'Inter-Medium',
-    marginLeft: 8,
   },
   photosContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
   photo: {
-    width: 120,
-    height: 80,
-    borderRadius: 12,
+    width: 140,
+    height: 100,
+    borderRadius: 16,
   },
   reviewItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    backdropFilter: 'blur(10px)',
   },
   reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   reviewAuthor: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-SemiBold',
   },
   reviewRating: {
@@ -655,25 +721,24 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reviewRatingText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter-Medium',
   },
   reviewComment: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    lineHeight: 20,
-  },
-  lastUpdated: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  lastUpdatedText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    lineHeight: 22,
   },
   expandIndicator: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
+  },
+  expandButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backdropFilter: 'blur(10px)',
   },
 });
