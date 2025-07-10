@@ -11,25 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import {
-  MapPin,
-  Star,
-  Euro,
-  Accessibility,
-  Clock,
-  Users,
-  Camera,
-  Navigation2,
-  X,
-  Heart,
-  Share,
-  ChevronUp,
-  ChevronDown,
-  Key,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react-native';
+import { MapPin, Star, Euro, Accessibility, Clock, Users, Camera, Navigation2, X, Heart, Share, ChevronUp, ChevronDown, Key, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useTheme';
 import { Restroom } from '@/types/restroom';
