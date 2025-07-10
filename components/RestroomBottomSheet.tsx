@@ -23,7 +23,7 @@ interface RestroomBottomSheetProps {
 }
 
 const { height: screenHeight } = Dimensions.get('window');
-const COLLAPSED_HEIGHT = 280;
+const COLLAPSED_HEIGHT = 320;
 const EXPANDED_HEIGHT = screenHeight * 0.85;
 
 export function RestroomBottomSheet({
@@ -42,14 +42,14 @@ export function RestroomBottomSheet({
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
       Animated.spring(sheetHeight, {
         toValue: COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
     ]).start();
   }, []);
@@ -89,14 +89,14 @@ export function RestroomBottomSheet({
       Animated.spring(translateY, {
         toValue: screenHeight - EXPANDED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
       Animated.spring(sheetHeight, {
         toValue: EXPANDED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
     ]).start();
   };
@@ -107,14 +107,14 @@ export function RestroomBottomSheet({
       Animated.spring(translateY, {
         toValue: screenHeight - COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
       Animated.spring(sheetHeight, {
         toValue: COLLAPSED_HEIGHT,
         useNativeDriver: false,
-        tension: 80,
-        friction: 8,
+        tension: 100,
+        friction: 10,
       }),
     ]).start();
   };
@@ -123,8 +123,8 @@ export function RestroomBottomSheet({
     Animated.spring(translateY, {
       toValue: screenHeight,
       useNativeDriver: false,
-      tension: 80,
-      friction: 8,
+      tension: 100,
+      friction: 10,
     }).start(() => {
       onClose();
     });
@@ -182,13 +182,13 @@ export function RestroomBottomSheet({
       {...panResponder.panHandlers}
     >
       <BlurView
-        intensity={theme === 'light' ? 95 : 80}
+        intensity={theme === 'light' ? 95 : 85}
         style={styles.blur}
       >
         <LinearGradient
           colors={theme === 'light' 
-            ? ['rgba(255,255,255,0.95)', 'rgba(248,250,252,0.98)']
-            : ['rgba(15,23,42,0.95)', 'rgba(30,41,59,0.98)']
+            ? ['rgba(255,255,255,0.98)', 'rgba(248,250,252,0.95)']
+            : ['rgba(15,23,42,0.98)', 'rgba(30,41,59,0.95)']
           }
           style={styles.gradient}
         >
@@ -205,7 +205,7 @@ export function RestroomBottomSheet({
                   colors={statusBadge.colors}
                   style={styles.statusIndicator}
                 >
-                  <statusBadge.icon size={12} color="#FFFFFF" strokeWidth={2.5} />
+                  <statusBadge.icon size={14} color="#FFFFFF" strokeWidth={2.5} />
                 </LinearGradient>
                 <View style={styles.headerText}>
                   <Text style={[styles.title, { color: colors.text }]}>
@@ -220,7 +220,7 @@ export function RestroomBottomSheet({
                 </View>
               </View>
               <TouchableOpacity
-                style={[styles.closeButton, { backgroundColor: `${colors.background}80` }]}
+                style={[styles.closeButton, { backgroundColor: `${colors.background}90` }]}
                 onPress={closeSheet}
               >
                 <X size={18} color={colors.textSecondary} strokeWidth={2} />
@@ -288,26 +288,34 @@ export function RestroomBottomSheet({
               </View>
 
               {restroom.distance && (
-                <View style={[styles.distanceBadge, { backgroundColor: `${colors.primary}20` }]}>
-                  <Text style={[styles.distanceText, { color: colors.primary }]}>
-                    {restroom.distance.toFixed(1)} км
-                  </Text>
-                </View>
+                <BlurView intensity={60} style={styles.distanceBadgeBlur}>
+                  <View style={[styles.distanceBadge, { backgroundColor: `${colors.primary}30` }]}>
+                    <Text style={[styles.distanceText, { color: colors.primary }]}>
+                      {restroom.distance.toFixed(1)} км
+                    </Text>
+                  </View>
+                </BlurView>
               )}
             </View>
 
             {/* Action Buttons with glassmorphism */}
             <View style={styles.actions}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: `${colors.error}15` }]}
-              >
-                <Heart size={18} color={colors.error} strokeWidth={2} />
+              <TouchableOpacity style={styles.actionButton}>
+                <BlurView intensity={60} style={styles.actionBlur}>
+                  <View style={[styles.actionContent, { backgroundColor: `${colors.error}20` }]}>
+                    <Heart size={18} color={colors.error} strokeWidth={2} />
+                  </View>
+                </BlurView>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: `${colors.textSecondary}15` }]}
-              >
-                <Share size={18} color={colors.textSecondary} strokeWidth={2} />
+              
+              <TouchableOpacity style={styles.actionButton}>
+                <BlurView intensity={60} style={styles.actionBlur}>
+                  <View style={[styles.actionContent, { backgroundColor: `${colors.textSecondary}20` }]}>
+                    <Share size={18} color={colors.textSecondary} strokeWidth={2} />
+                  </View>
+                </BlurView>
               </TouchableOpacity>
+              
               <TouchableOpacity
                 style={styles.primaryButton}
                 onPress={onNavigate}
@@ -328,96 +336,130 @@ export function RestroomBottomSheet({
                 style={styles.expandedContent}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Cleanliness Rating */}
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                    Чистота и качество
-                  </Text>
-                  <View style={styles.cleanlinessRow}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        size={20}
-                        color={star <= restroom.cleanliness ? '#10B981' : colors.border}
-                        fill={star <= restroom.cleanliness ? '#10B981' : colors.border}
-                        strokeWidth={2}
-                      />
-                    ))}
-                    <Text style={[styles.cleanlinessText, { color: colors.text }]}>
-                      {restroom.cleanliness}/5
+                {/* Business Type */}
+                <BlurView intensity={40} style={styles.sectionBlur}>
+                  <View style={[styles.section, { backgroundColor: `${colors.surface}60` }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Тип заведение
                     </Text>
+                    <View style={styles.businessTypeContainer}>
+                      <LinearGradient
+                        colors={['#8B5CF6', '#7C3AED']}
+                        style={styles.businessTypeBadge}
+                      >
+                        <Text style={styles.businessTypeText}>
+                          {restroom.businessType === 'restaurant' ? 'Ресторант' :
+                           restroom.businessType === 'cafe' ? 'Кафе' :
+                           restroom.businessType === 'bar' ? 'Бар' :
+                           restroom.businessType === 'public' ? 'Обществено' :
+                           restroom.businessType === 'gas_station' ? 'Бензиностанция' :
+                           restroom.businessType === 'mall' ? 'Мол' : 'Други'}
+                        </Text>
+                      </LinearGradient>
+                    </View>
                   </View>
-                </View>
+                </BlurView>
+
+                {/* Cleanliness Rating */}
+                <BlurView intensity={40} style={styles.sectionBlur}>
+                  <View style={[styles.section, { backgroundColor: `${colors.surface}60` }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Чистота и качество
+                    </Text>
+                    <View style={styles.cleanlinessRow}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={20}
+                          color={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                          fill={star <= restroom.cleanliness ? '#10B981' : colors.border}
+                          strokeWidth={2}
+                        />
+                      ))}
+                      <Text style={[styles.cleanlinessText, { color: colors.text }]}>
+                        {restroom.cleanliness}/5
+                      </Text>
+                    </View>
+                  </View>
+                </BlurView>
 
                 {/* Amenities */}
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                    Удобства
-                  </Text>
-                  <View style={styles.amenitiesGrid}>
-                    {restroom.amenities.map((amenity, index) => (
-                      <View
-                        key={index}
-                        style={[styles.amenityChip, { backgroundColor: `${colors.primary}15` }]}
-                      >
-                        <Text style={[styles.amenityText, { color: colors.primary }]}>
-                          {amenity}
-                        </Text>
-                      </View>
-                    ))}
+                <BlurView intensity={40} style={styles.sectionBlur}>
+                  <View style={[styles.section, { backgroundColor: `${colors.surface}60` }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Удобства
+                    </Text>
+                    <View style={styles.amenitiesGrid}>
+                      {restroom.amenities.map((amenity, index) => (
+                        <BlurView key={index} intensity={30} style={styles.amenityChipBlur}>
+                          <View style={[styles.amenityChip, { backgroundColor: `${colors.primary}25` }]}>
+                            <Text style={[styles.amenityText, { color: colors.primary }]}>
+                              {amenity}
+                            </Text>
+                          </View>
+                        </BlurView>
+                      ))}
+                    </View>
                   </View>
-                </View>
+                </BlurView>
 
                 {/* Photos */}
                 {restroom.photos.length > 0 && (
-                  <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                      Снимки
-                    </Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      <View style={styles.photosContainer}>
-                        {restroom.photos.map((photo, index) => (
-                          <Image
-                            key={index}
-                            source={{ uri: photo }}
-                            style={styles.photo}
-                          />
-                        ))}
-                      </View>
-                    </ScrollView>
-                  </View>
+                  <BlurView intensity={40} style={styles.sectionBlur}>
+                    <View style={[styles.section, { backgroundColor: `${colors.surface}60` }]}>
+                      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                        Снимки
+                      </Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={styles.photosContainer}>
+                          {restroom.photos.map((photo, index) => (
+                            <View key={index} style={styles.photoWrapper}>
+                              <Image
+                                source={{ uri: photo }}
+                                style={styles.photo}
+                              />
+                              <BlurView intensity={20} style={styles.photoOverlay}>
+                                <Camera size={16} color="#FFFFFF" strokeWidth={2} />
+                              </BlurView>
+                            </View>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </View>
+                  </BlurView>
                 )}
 
                 {/* Recent Reviews */}
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                    Последни отзиви
-                  </Text>
-                  {restroom.reviews.slice(0, 3).map((review) => (
-                    <View
-                      key={review.id}
-                      style={[styles.reviewItem, { 
-                        backgroundColor: `${colors.surface}50`,
-                        borderColor: `${colors.border}30`
-                      }]}
-                    >
-                      <View style={styles.reviewHeader}>
-                        <Text style={[styles.reviewAuthor, { color: colors.text }]}>
-                          {review.userName}
-                        </Text>
-                        <View style={styles.reviewRating}>
-                          <Star size={12} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
-                          <Text style={[styles.reviewRatingText, { color: colors.textSecondary }]}>
-                            {review.rating}
+                <BlurView intensity={40} style={styles.sectionBlur}>
+                  <View style={[styles.section, { backgroundColor: `${colors.surface}60` }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Последни отзиви
+                    </Text>
+                    {restroom.reviews.slice(0, 3).map((review) => (
+                      <BlurView key={review.id} intensity={30} style={styles.reviewBlur}>
+                        <View style={[styles.reviewItem, { 
+                          backgroundColor: `${colors.surface}40`,
+                          borderColor: `${colors.border}30`
+                        }]}>
+                          <View style={styles.reviewHeader}>
+                            <Text style={[styles.reviewAuthor, { color: colors.text }]}>
+                              {review.userName}
+                            </Text>
+                            <View style={styles.reviewRating}>
+                              <Star size={12} color="#F59E0B" fill="#F59E0B" strokeWidth={2} />
+                              <Text style={[styles.reviewRatingText, { color: colors.textSecondary }]}>
+                                {review.rating}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>
+                            {review.comment}
                           </Text>
                         </View>
-                      </View>
-                      <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>
-                        {review.comment}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+                      </BlurView>
+                    ))}
+                  </View>
+                </BlurView>
               </ScrollView>
             )}
 
@@ -426,13 +468,15 @@ export function RestroomBottomSheet({
               style={styles.expandIndicator}
               onPress={isExpanded ? collapseSheet : expandSheet}
             >
-              <View style={[styles.expandButton, { backgroundColor: `${colors.primary}20` }]}>
-                {isExpanded ? (
-                  <ChevronDown size={20} color={colors.primary} strokeWidth={2.5} />
-                ) : (
-                  <ChevronUp size={20} color={colors.primary} strokeWidth={2.5} />
-                )}
-              </View>
+              <BlurView intensity={60} style={styles.expandBlur}>
+                <View style={[styles.expandButton, { backgroundColor: `${colors.primary}30` }]}>
+                  {isExpanded ? (
+                    <ChevronDown size={20} color={colors.primary} strokeWidth={2.5} />
+                  ) : (
+                    <ChevronUp size={20} color={colors.primary} strokeWidth={2.5} />
+                  )}
+                </View>
+              </BlurView>
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -451,10 +495,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    elevation: 24,
+    shadowOffset: { width: 0, height: -12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 32,
+    elevation: 32,
   },
   blur: {
     flex: 1,
@@ -465,6 +509,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   content: {
     flex: 1,
@@ -479,7 +525,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 5,
     borderRadius: 3,
-    opacity: 0.3,
+    opacity: 0.4,
   },
   header: {
     flexDirection: 'row',
@@ -494,18 +540,18 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   statusIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
     marginRight: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerText: {
     flex: 1,
@@ -531,7 +577,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   badgeContainer: {
     flexDirection: 'row',
@@ -547,10 +594,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   statusText: {
     fontSize: 13,
@@ -576,10 +623,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   ratingText: {
     fontSize: 14,
@@ -590,10 +637,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
   },
+  distanceBadgeBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
   distanceBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   distanceText: {
     fontSize: 14,
@@ -608,19 +661,29 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
+    overflow: 'hidden',
+  },
+  actionBlur: {
+    flex: 1,
+    borderRadius: 24,
+  },
+  actionContent: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backdropFilter: 'blur(10px)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   primaryButton: {
     flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
   },
   primaryGradient: {
     flexDirection: 'row',
@@ -638,13 +701,39 @@ const styles = StyleSheet.create({
   expandedContent: {
     flex: 1,
   },
+  sectionBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
   section: {
-    marginBottom: 28,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
     marginBottom: 16,
+  },
+  businessTypeContainer: {
+    alignItems: 'flex-start',
+  },
+  businessTypeBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  businessTypeText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
   },
   cleanlinessRow: {
     flexDirection: 'row',
@@ -661,11 +750,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
+  amenityChipBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
   amenityChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
-    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   amenityText: {
     fontSize: 13,
@@ -675,17 +769,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
   },
+  photoWrapper: {
+    position: 'relative',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
   photo: {
     width: 140,
     height: 100,
     borderRadius: 16,
   },
+  photoOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
   reviewItem: {
     padding: 16,
     borderRadius: 16,
-    marginBottom: 12,
     borderWidth: 1,
-    backdropFilter: 'blur(10px)',
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -715,12 +827,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
+  expandBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   expandButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

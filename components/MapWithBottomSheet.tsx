@@ -9,6 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import SuperCluster from 'react-native-super-cluster';
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
@@ -41,6 +42,12 @@ export function MapWithBottomSheet({
   const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(restrooms);
+  const [mapRegion, setMapRegion] = useState({
+    latitude: userLocation?.latitude || 42.6977,
+    longitude: userLocation?.longitude || 23.3219,
+    latitudeDelta: INITIAL_DELTA,
+    longitudeDelta: INITIAL_DELTA,
+  });
 
   const mapRef = useRef<MapView | null>(null);
 
@@ -57,9 +64,32 @@ export function MapWithBottomSheet({
     }
   }, [searchQuery, restrooms]);
 
+  // Convert restrooms to cluster format
+  const clusterData = filteredRestrooms.map(restroom => ({
+    location: [restroom.coordinates.longitude, restroom.coordinates.latitude],
+    weight: 1,
+    restroom: restroom,
+  }));
+
   const handleMarkerPress = (restroom: Restroom) => {
     console.log('Marker pressed:', restroom.name);
     setSelectedRestroom(restroom);
+  };
+
+  const handleClusterPress = (cluster: any) => {
+    if (cluster.pointCount === 1) {
+      // Single restroom
+      handleMarkerPress(cluster.restroom);
+    } else {
+      // Zoom into cluster
+      const coordinates = cluster.coordinates;
+      mapRef.current?.animateToRegion({
+        latitude: coordinates[1],
+        longitude: coordinates[0],
+        latitudeDelta: mapRegion.latitudeDelta / 2,
+        longitudeDelta: mapRegion.longitudeDelta / 2,
+      });
+    }
   };
 
   const closeBottomSheet = () => {
@@ -118,13 +148,13 @@ export function MapWithBottomSheet({
     <View style={styles.mapControls}>
       <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
         <BlurView
-          intensity={theme === 'light' ? 70 : 50}
+          intensity={theme === 'light' ? 80 : 60}
           style={styles.controlBlur}
         >
           <View
             style={[
               styles.controlContent,
-              { backgroundColor: colors.surface },
+              { backgroundColor: `${colors.surface}95` },
             ]}
           >
             <ZoomIn size={18} color={colors.primary} strokeWidth={2} />
@@ -134,13 +164,13 @@ export function MapWithBottomSheet({
 
       <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
         <BlurView
-          intensity={theme === 'light' ? 70 : 50}
+          intensity={theme === 'light' ? 80 : 60}
           style={styles.controlBlur}
         >
           <View
             style={[
               styles.controlContent,
-              { backgroundColor: colors.surface },
+              { backgroundColor: `${colors.surface}95` },
             ]}
           >
             <ZoomOut size={18} color={colors.primary} strokeWidth={2} />
@@ -150,13 +180,13 @@ export function MapWithBottomSheet({
 
       <TouchableOpacity style={styles.controlButton} onPress={centerOnUser}>
         <BlurView
-          intensity={theme === 'light' ? 70 : 50}
+          intensity={theme === 'light' ? 80 : 60}
           style={styles.controlBlur}
         >
           <View
             style={[
               styles.controlContent,
-              { backgroundColor: colors.surface },
+              { backgroundColor: `${colors.surface}95` },
             ]}
           >
             <Locate size={18} color={colors.primary} strokeWidth={2} />
@@ -181,26 +211,35 @@ export function MapWithBottomSheet({
         customMapStyle={theme === 'light' ? lightStyle : darkStyle}
         showsUserLocation
         showsMyLocationButton={false}
-        initialRegion={{
-          latitude: userLocation?.latitude || 42.6977,
-          longitude: userLocation?.longitude || 23.3219,
-          latitudeDelta: INITIAL_DELTA,
-          longitudeDelta: INITIAL_DELTA,
-        }}
+        initialRegion={mapRegion}
+        onRegionChangeComplete={setMapRegion}
       >
-        {filteredRestrooms.map((restroom) => (
-          <Marker
-            key={restroom.id}
-            coordinate={{
-              latitude: restroom.coordinates.latitude,
-              longitude: restroom.coordinates.longitude,
-            }}
-            onPress={() => handleMarkerPress(restroom)}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <Pin restroom={restroom} />
-          </Marker>
-        ))}
+        <SuperCluster
+          data={clusterData}
+          radius={60}
+          maxZoom={16}
+          minZoom={1}
+          extent={512}
+          nodeSize={64}
+          region={mapRegion}
+          onMarkerPress={handleClusterPress}
+          renderMarker={(item) => (
+            <Marker
+              key={item.restroom?.id || `cluster-${item.clusterId}`}
+              coordinate={{
+                latitude: item.coordinates[1],
+                longitude: item.coordinates[0],
+              }}
+              onPress={() => handleClusterPress(item)}
+              tracksViewChanges={false}
+            >
+              <Pin 
+                restroom={item.restroom} 
+                count={item.pointCount > 1 ? item.pointCount : undefined}
+              />
+            </Marker>
+          )}
+        />
       </MapView>
 
       <AnimatedSearchBar
@@ -240,10 +279,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   controlBlur: {
     flex: 1,
@@ -253,5 +292,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
 });
