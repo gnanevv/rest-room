@@ -14,43 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { 
-  MapPin, 
-  Camera, 
-  Star, 
-  Euro, 
-  Accessibility, 
-  Clock, 
-  Building, 
-  Phone, 
-  Globe, 
-  Plus, 
-  X, 
-  Locate,
-  CheckCircle,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  Zap,
-  Award,
-  Target,
-  Coffee,
-  Utensils,
-  ShoppingBag,
-  Fuel,
-  Users,
-  Wifi,
-  Car,
-  Baby,
-  Droplets,
-  Wind,
-  Music,
-  Shield,
-  Upload,
-  Image as ImageIcon,
-  Eye,
-  Send
-} from 'lucide-react-native';
+import { MapPin, Camera, Star, Euro, Accessibility, Clock, Building, Phone, Globe, Plus, X, Locate, CircleCheck as CheckCircle, ArrowRight, ArrowLeft, Sparkles, Zap, Award, Target, Coffee, Utensils, ShoppingBag, Fuel, Users, Wifi, Car, Baby, Droplets, Wind, Music, Shield, Upload, Image as ImageIcon, Eye, Send } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
