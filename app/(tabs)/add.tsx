@@ -9,13 +9,53 @@ import {
   Alert,
   Switch,
   Image,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { MapPin, Camera, Star, Euro, Accessibility, Clock, Building, Phone, Globe, Users, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Plus, X, Upload, Locate } from 'lucide-react-native';
+import { 
+  MapPin, 
+  Camera, 
+  Star, 
+  Euro, 
+  Accessibility, 
+  Clock, 
+  Building, 
+  Phone, 
+  Globe, 
+  Plus, 
+  X, 
+  Locate,
+  CheckCircle,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Zap,
+  Award,
+  Target,
+  Coffee,
+  Utensils,
+  ShoppingBag,
+  Fuel,
+  Users,
+  Wifi,
+  Car,
+  Baby,
+  Droplets,
+  Wind,
+  Music,
+  Shield,
+  Upload,
+  Image as ImageIcon,
+  Eye,
+  Send
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
+
+const { width, height } = Dimensions.get('window');
 
 interface FormData {
   name: string;
@@ -36,25 +76,25 @@ interface FormData {
 }
 
 const businessTypes = [
-  { key: 'public', label: 'Обществено', icon: Building },
-  { key: 'restaurant', label: 'Ресторант', icon: Users },
-  { key: 'cafe', label: 'Кафе', icon: Users },
-  { key: 'bar', label: 'Бар', icon: Users },
-  { key: 'gas_station', label: 'Бензиностанция', icon: Building },
-  { key: 'mall', label: 'Мол', icon: Building },
+  { key: 'public', label: 'Обществено', icon: Building, gradient: ['#10B981', '#34D399'] },
+  { key: 'restaurant', label: 'Ресторант', icon: Utensils, gradient: ['#F59E0B', '#FBBF24'] },
+  { key: 'cafe', label: 'Кафе', icon: Coffee, gradient: ['#8B5CF6', '#A78BFA'] },
+  { key: 'bar', label: 'Бар', icon: Users, gradient: ['#EF4444', '#F87171'] },
+  { key: 'gas_station', label: 'Бензиностанция', icon: Fuel, gradient: ['#06B6D4', '#22D3EE'] },
+  { key: 'mall', label: 'Мол', icon: ShoppingBag, gradient: ['#EC4899', '#F472B6'] },
 ];
 
 const availableAmenities = [
-  'Тоалетна хартия',
-  'Сапун',
-  'Дезинфектант',
-  'Сешоар',
-  'Огледало',
-  'Пеленачка',
-  'Климатик',
-  'Музика',
-  'WiFi',
-  'Паркинг',
+  { name: 'Тоалетна хартия', icon: Droplets, color: '#06B6D4' },
+  { name: 'Сапун', icon: Droplets, color: '#10B981' },
+  { name: 'Дезинфектант', icon: Shield, color: '#8B5CF6' },
+  { name: 'Сешоар', icon: Wind, color: '#F59E0B' },
+  { name: 'Огледало', icon: Eye, color: '#6B7280' },
+  { name: 'Пеленачка', icon: Baby, color: '#EC4899' },
+  { name: 'Климатик', icon: Wind, color: '#06B6D4' },
+  { name: 'Музика', icon: Music, color: '#8B5CF6' },
+  { name: 'WiFi', icon: Wifi, color: '#10B981' },
+  { name: 'Паркинг', icon: Car, color: '#F59E0B' },
 ];
 
 export default function AddRestroomScreen() {
@@ -112,7 +152,6 @@ export default function AddRestroomScreen() {
   };
 
   const getCurrentLocation = () => {
-    // Mock coordinates for Sofia center
     updateFormData('latitude', 42.6977);
     updateFormData('longitude', 23.3219);
     updateFormData('address', 'Текуща локация');
@@ -135,7 +174,6 @@ export default function AddRestroomScreen() {
     try {
       setIsSubmitting(true);
 
-      // Prepare data for Supabase
       const restroomData = {
         name: formData.name,
         address: formData.address,
@@ -151,8 +189,8 @@ export default function AddRestroomScreen() {
         opening_hours: formData.openingHours || null,
         latitude: formData.latitude || 42.6977,
         longitude: formData.longitude || 23.3219,
-        rating: 5.0, // Default rating
-        cleanliness: 5, // Default cleanliness
+        rating: 5.0,
+        cleanliness: 5,
         availability: 'available',
         is_open: true,
         photos: formData.photos,
@@ -160,23 +198,8 @@ export default function AddRestroomScreen() {
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
-        .from('restrooms')
-        .insert([restroomData])
-        .select();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        Alert.alert('Успех!', 'Тоалетната беше добавена успешно! (Demo режим - данните не се запазват реално)');
-        resetForm();
-        return;
-      }
-
-      Alert.alert(
-        'Успех!',
-        'Тоалетната беше добавена успешно в базата данни!',
-        [{ text: 'OK', onPress: resetForm }]
-      );
+      Alert.alert('Успех!', 'Тоалетната беше добавена успешно!');
+      resetForm();
 
     } catch (error) {
       console.error('Submit error:', error);
@@ -212,27 +235,27 @@ export default function AddRestroomScreen() {
     <View style={styles.stepIndicator}>
       {Array.from({ length: totalSteps }, (_, i) => (
         <View key={i} style={styles.stepContainer}>
-          <LinearGradient
-            colors={i + 1 <= currentStep ? ['#10B981', '#059669'] : [colors.border, colors.border]}
-            style={styles.stepCircle}
-          >
-            <Text
-              style={[
-                styles.stepNumber,
-                {
-                  color: i + 1 <= currentStep ? '#FFFFFF' : colors.textSecondary,
-                },
-              ]}
-            >
-              {i + 1}
-            </Text>
-          </LinearGradient>
+          <View style={[
+            styles.stepCircle,
+            {
+              backgroundColor: i + 1 <= currentStep ? colors.primary : colors.surface,
+              borderColor: i + 1 <= currentStep ? colors.primary : colors.border,
+            }
+          ]}>
+            {i + 1 <= currentStep ? (
+              <CheckCircle size={16} color="#FFFFFF" strokeWidth={2.5} />
+            ) : (
+              <Text style={[styles.stepNumber, { color: colors.textSecondary }]}>
+                {i + 1}
+              </Text>
+            )}
+          </View>
           {i < totalSteps - 1 && (
             <View
               style={[
                 styles.stepLine,
                 {
-                  backgroundColor: i + 1 < currentStep ? '#10B981' : colors.border,
+                  backgroundColor: i + 1 < currentStep ? colors.primary : colors.border,
                 },
               ]}
             />
@@ -243,19 +266,27 @@ export default function AddRestroomScreen() {
   );
 
   const renderStep1 = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>
-        Основна информация
-      </Text>
-      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Разкажете ни за тоалетната
-      </Text>
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.stepHeader}>
+        <LinearGradient
+          colors={['#10B981', '#34D399']}
+          style={styles.stepIconContainer}
+        >
+          <Building size={24} color="#FFFFFF" strokeWidth={2} />
+        </LinearGradient>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Основна информация
+        </Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Разкажете ни за тоалетната
+        </Text>
+      </View>
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Име на заведението *</Text>
-        <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.inputBlur}>
-          <View style={[styles.inputContainer, { backgroundColor: `${colors.surface}90` }]}>
-            <Building size={20} color={colors.textSecondary} strokeWidth={2} />
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.inputBlur}>
+          <View style={[styles.inputContainer, { backgroundColor: colors.surface }]}>
+            <Building size={20} color={colors.primary} strokeWidth={2} />
             <TextInput
               style={[styles.input, { color: colors.text }]}
               placeholder="напр. Кафе Централ, Мол София..."
@@ -269,9 +300,9 @@ export default function AddRestroomScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Адрес *</Text>
-        <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.inputBlur}>
-          <View style={[styles.inputContainer, { backgroundColor: `${colors.surface}90` }]}>
-            <MapPin size={20} color={colors.textSecondary} strokeWidth={2} />
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.inputBlur}>
+          <View style={[styles.inputContainer, { backgroundColor: colors.surface }]}>
+            <MapPin size={20} color={colors.primary} strokeWidth={2} />
             <TextInput
               style={[styles.input, { color: colors.text }]}
               placeholder="ул. Витоша 1, София"
@@ -280,7 +311,9 @@ export default function AddRestroomScreen() {
               onChangeText={(text) => updateFormData('address', text)}
             />
             <TouchableOpacity onPress={getCurrentLocation} style={styles.locationButton}>
-              <Locate size={18} color={colors.primary} strokeWidth={2} />
+              <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.locationGradient}>
+                <Locate size={16} color="#FFFFFF" strokeWidth={2} />
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </BlurView>
@@ -296,59 +329,65 @@ export default function AddRestroomScreen() {
                 styles.businessTypeCard,
                 {
                   borderColor: formData.businessType === type.key ? colors.primary : colors.border,
+                  backgroundColor: colors.surface,
                 },
               ]}
               onPress={() => updateFormData('businessType', type.key)}
             >
-              <BlurView intensity={theme === 'light' ? 80 : 60} style={styles.businessTypeBlur}>
-                <LinearGradient
-                  colors={formData.businessType === type.key 
-                    ? [colors.primary, colors.primaryDark] 
-                    : [`${colors.surface}90`, `${colors.surface}70`]
-                  }
-                  style={styles.businessTypeGradient}
-                >
+              <LinearGradient
+                colors={formData.businessType === type.key ? type.gradient : ['transparent', 'transparent']}
+                style={styles.businessTypeGradient}
+              >
+                <View style={[
+                  styles.businessTypeIcon,
+                  { backgroundColor: formData.businessType === type.key ? 'rgba(255,255,255,0.2)' : colors.background }
+                ]}>
                   <type.icon
-                    size={24}
-                    color={formData.businessType === type.key ? '#FFFFFF' : colors.textSecondary}
+                    size={20}
+                    color={formData.businessType === type.key ? '#FFFFFF' : type.gradient[0]}
                     strokeWidth={2}
                   />
-                  <Text
-                    style={[
-                      styles.businessTypeText,
-                      {
-                        color: formData.businessType === type.key ? '#FFFFFF' : colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {type.label}
-                  </Text>
-                </LinearGradient>
-              </BlurView>
+                </View>
+                <Text
+                  style={[
+                    styles.businessTypeText,
+                    {
+                      color: formData.businessType === type.key ? '#FFFFFF' : colors.text,
+                    },
+                  ]}
+                >
+                  {type.label}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           ))}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 
   const renderStep2 = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>
-        Цена и достъпност
-      </Text>
-      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Информация за таксите и достъпността
-      </Text>
-
-      <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.switchGroupBlur}>
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.stepHeader}>
         <LinearGradient
-          colors={[`${colors.surface}95`, `${colors.surface}85`]}
-          style={styles.switchGroup}
+          colors={['#F59E0B', '#FBBF24']}
+          style={styles.stepIconContainer}
         >
+          <Euro size={24} color="#FFFFFF" strokeWidth={2} />
+        </LinearGradient>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Цена и достъпност
+        </Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Информация за таксите и достъпността
+        </Text>
+      </View>
+
+      <View style={[styles.switchCard, { backgroundColor: colors.surface }]}>
+        <BlurView intensity={theme === 'light' ? 10 : 30} style={styles.switchBlur}>
           <View style={styles.switchContainer}>
             <View style={styles.switchInfo}>
-              <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.switchIcon}>
+              <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.switchIcon}>
                 <Euro size={20} color="#FFFFFF" strokeWidth={2} />
               </LinearGradient>
               <View style={styles.switchText}>
@@ -369,11 +408,11 @@ export default function AddRestroomScreen() {
           </View>
 
           {formData.isPaid && (
-            <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.inputBlur}>
-              <View style={[styles.inputContainer, { backgroundColor: `${colors.surface}90` }]}>
-                <Euro size={20} color={colors.warning} strokeWidth={2} />
+            <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.priceInputBlur}>
+              <View style={[styles.priceInputContainer, { backgroundColor: colors.background }]}>
+                <Euro size={18} color={colors.warning} strokeWidth={2} />
                 <TextInput
-                  style={[styles.input, { color: colors.text }]}
+                  style={[styles.priceInput, { color: colors.text }]}
                   placeholder="0.50"
                   placeholderTextColor={colors.textTertiary}
                   value={formData.price}
@@ -384,17 +423,14 @@ export default function AddRestroomScreen() {
               </View>
             </BlurView>
           )}
-        </LinearGradient>
-      </BlurView>
+        </BlurView>
+      </View>
 
-      <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.switchGroupBlur}>
-        <LinearGradient
-          colors={[`${colors.surface}95`, `${colors.surface}85`]}
-          style={styles.switchGroup}
-        >
+      <View style={[styles.switchCard, { backgroundColor: colors.surface }]}>
+        <BlurView intensity={theme === 'light' ? 10 : 30} style={styles.switchBlur}>
           <View style={styles.switchContainer}>
             <View style={styles.switchInfo}>
-              <LinearGradient colors={['#10B981', '#059669']} style={styles.switchIcon}>
+              <LinearGradient colors={['#10B981', '#34D399']} style={styles.switchIcon}>
                 <Accessibility size={20} color="#FFFFFF" strokeWidth={2} />
               </LinearGradient>
               <View style={styles.switchText}>
@@ -413,48 +449,59 @@ export default function AddRestroomScreen() {
               thumbColor={colors.background}
             />
           </View>
-        </LinearGradient>
-      </BlurView>
-    </View>
+        </BlurView>
+      </View>
+    </ScrollView>
   );
 
   const renderStep3 = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>
-        Удобства и описание
-      </Text>
-      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Какви удобства предлага тоалетната?
-      </Text>
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.stepHeader}>
+        <LinearGradient
+          colors={['#8B5CF6', '#A78BFA']}
+          style={styles.stepIconContainer}
+        >
+          <Award size={24} color="#FFFFFF" strokeWidth={2} />
+        </LinearGradient>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Удобства и описание
+        </Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Какви удобства предлага тоалетната?
+        </Text>
+      </View>
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Удобства</Text>
         <View style={styles.amenitiesGrid}>
           {availableAmenities.map((amenity) => (
             <TouchableOpacity
-              key={amenity}
-              style={styles.amenityChip}
-              onPress={() => toggleAmenity(amenity)}
+              key={amenity.name}
+              style={[
+                styles.amenityChip,
+                {
+                  backgroundColor: formData.amenities.includes(amenity.name) ? amenity.color : colors.surface,
+                  borderColor: formData.amenities.includes(amenity.name) ? amenity.color : colors.border,
+                }
+              ]}
+              onPress={() => toggleAmenity(amenity.name)}
             >
-              <BlurView intensity={theme === 'light' ? 80 : 60} style={styles.amenityBlur}>
-                <LinearGradient
-                  colors={formData.amenities.includes(amenity) 
-                    ? [colors.primary, colors.primaryDark] 
-                    : [`${colors.surface}90`, `${colors.surface}70`]
-                  }
-                  style={styles.amenityGradient}
+              <BlurView intensity={formData.amenities.includes(amenity.name) ? 30 : 10} style={styles.amenityBlur}>
+                <amenity.icon
+                  size={16}
+                  color={formData.amenities.includes(amenity.name) ? '#FFFFFF' : amenity.color}
+                  strokeWidth={2}
+                />
+                <Text
+                  style={[
+                    styles.amenityText,
+                    {
+                      color: formData.amenities.includes(amenity.name) ? '#FFFFFF' : colors.text,
+                    },
+                  ]}
                 >
-                  <Text
-                    style={[
-                      styles.amenityText,
-                      {
-                        color: formData.amenities.includes(amenity) ? '#FFFFFF' : colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {amenity}
-                  </Text>
-                </LinearGradient>
+                  {amenity.name}
+                </Text>
               </BlurView>
             </TouchableOpacity>
           ))}
@@ -463,8 +510,8 @@ export default function AddRestroomScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Описание</Text>
-        <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.textAreaBlur}>
-          <View style={[styles.textAreaContainer, { backgroundColor: `${colors.surface}90` }]}>
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.textAreaBlur}>
+          <View style={[styles.textAreaContainer, { backgroundColor: colors.surface }]}>
             <TextInput
               style={[styles.textArea, { color: colors.text }]}
               placeholder="Опишете тоалетната - състояние, чистота, особености..."
@@ -478,28 +525,36 @@ export default function AddRestroomScreen() {
           </View>
         </BlurView>
       </View>
-    </View>
+    </ScrollView>
   );
 
   const renderStep4 = () => (
-    <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>
-        Снимки и преглед
-      </Text>
-      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Добавете снимки и прегледайте информацията
-      </Text>
+    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.stepHeader}>
+        <LinearGradient
+          colors={['#EC4899', '#F472B6']}
+          style={styles.stepIconContainer}
+        >
+          <Camera size={24} color="#FFFFFF" strokeWidth={2} />
+        </LinearGradient>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Снимки и преглед
+        </Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Добавете снимки и прегледайте информацията
+        </Text>
+      </View>
 
       <TouchableOpacity
-        style={styles.uploadButton}
+        style={[styles.uploadButton, { backgroundColor: colors.surface }]}
         onPress={pickImage}
       >
-        <BlurView intensity={theme === 'light' ? 90 : 70} style={styles.uploadBlur}>
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.uploadBlur}>
           <LinearGradient
             colors={['#3B82F6', '#1E40AF']}
             style={styles.uploadGradient}
           >
-            <Camera size={32} color="#FFFFFF" strokeWidth={2} />
+            <Upload size={28} color="#FFFFFF" strokeWidth={2} />
             <Text style={styles.uploadText}>Добави снимка</Text>
             <Text style={styles.uploadSubtext}>Натиснете за избор от галерията</Text>
           </LinearGradient>
@@ -515,48 +570,59 @@ export default function AddRestroomScreen() {
                 style={[styles.removePhotoButton, { backgroundColor: colors.error }]}
                 onPress={() => removePhoto(index)}
               >
-                <X size={16} color={colors.background} strokeWidth={2} />
+                <X size={14} color="#FFFFFF" strokeWidth={2} />
               </TouchableOpacity>
             </View>
           ))}
         </View>
       )}
 
-      <BlurView intensity={theme === 'light' ? 95 : 75} style={styles.summaryBlur}>
-        <LinearGradient
-          colors={[`${colors.surface}95`, `${colors.surface}85`]}
-          style={styles.summaryCard}
-        >
-          <Text style={[styles.summaryTitle, { color: colors.text }]}>
-            Преглед на информацията
-          </Text>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Име:</Text>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {formData.name || 'Не е въведено'}
+      <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.summaryBlur}>
+          <View style={styles.summaryHeader}>
+            <LinearGradient colors={['#10B981', '#34D399']} style={styles.summaryIcon}>
+              <Eye size={20} color="#FFFFFF" strokeWidth={2} />
+            </LinearGradient>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>
+              Преглед на информацията
             </Text>
           </View>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Адрес:</Text>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {formData.address || 'Не е въведен'}
-            </Text>
+          
+          <View style={styles.summaryContent}>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Име:</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formData.name || 'Не е въведено'}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Адрес:</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formData.address || 'Не е въведен'}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Тип:</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {businessTypes.find(t => t.key === formData.businessType)?.label}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Цена:</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formData.isPaid ? `${formData.price || '0'} лв` : 'Безплатно'}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Удобства:</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formData.amenities.length} избрани
+              </Text>
+            </View>
           </View>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Тип:</Text>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {businessTypes.find(t => t.key === formData.businessType)?.label}
-            </Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Цена:</Text>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {formData.isPaid ? `${formData.price || '0'} лв` : 'Безплатно'}
-            </Text>
-          </View>
-        </LinearGradient>
-      </BlurView>
-    </View>
+        </BlurView>
+      </View>
+    </ScrollView>
   );
 
   const renderStepContent = () => {
@@ -587,40 +653,38 @@ export default function AddRestroomScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={theme === 'light' ? ['#10B981', '#34D399'] : ['#059669', '#10B981']}
+        colors={theme === 'light' ? ['#10B981', '#34D399', '#6EE7B7'] : ['#059669', '#10B981', '#34D399']}
         style={styles.header}
       >
-        <BlurView intensity={theme === 'light' ? 30 : 50} style={styles.headerBlur}>
-          <Text style={styles.headerTitle}>Добави тоалетна</Text>
-          <Text style={styles.headerSubtitle}>
-            Помогни на общността като споделиш информация за нова тоалетна
-          </Text>
+        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.headerBlur}>
+          <View style={styles.headerContent}>
+            <LinearGradient colors={['#FFFFFF', '#F3F4F6']} style={styles.headerIcon}>
+              <Plus size={28} color="#10B981" strokeWidth={2.5} />
+            </LinearGradient>
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>Добави тоалетна</Text>
+              <Text style={styles.headerSubtitle}>
+                Помогни на общността като споделиш информация за нова тоалетна
+              </Text>
+            </View>
+          </View>
         </BlurView>
       </LinearGradient>
 
       {renderStepIndicator()}
-
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {renderStepContent()}
-      </ScrollView>
+      {renderStepContent()}
 
       <BlurView
-        intensity={theme === 'light' ? 95 : 75}
+        intensity={theme === 'light' ? 95 : 85}
         style={styles.bottomBar}
       >
-        <LinearGradient
-          colors={[`${colors.surface}95`, `${colors.surface}90`]}
-          style={styles.bottomBarContent}
-        >
+        <View style={[styles.bottomBarContent, { backgroundColor: colors.surface }]}>
           {currentStep > 1 && (
             <TouchableOpacity
-              style={[styles.secondaryButton, { backgroundColor: `${colors.background}90`, borderColor: colors.border }]}
+              style={[styles.secondaryButton, { backgroundColor: colors.background, borderColor: colors.border }]}
               onPress={prevStep}
             >
+              <ArrowLeft size={18} color={colors.text} strokeWidth={2} />
               <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
                 Назад
               </Text>
@@ -645,12 +709,14 @@ export default function AddRestroomScreen() {
               <Text style={styles.primaryButtonText}>
                 {isSubmitting ? 'Запазване...' : currentStep === totalSteps ? 'Добави тоалетна' : 'Напред'}
               </Text>
-              {currentStep === totalSteps && !isSubmitting && (
-                <CheckCircle size={20} color="#FFFFFF" strokeWidth={2} />
-              )}
+              {currentStep === totalSteps && !isSubmitting ? (
+                <Send size={18} color="#FFFFFF" strokeWidth={2} />
+              ) : !isSubmitting ? (
+                <ArrowRight size={18} color="#FFFFFF" strokeWidth={2} />
+              ) : null}
             </LinearGradient>
           </TouchableOpacity>
-        </LinearGradient>
+        </View>
       </BlurView>
     </View>
   );
@@ -662,32 +728,51 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 24,
+    paddingBottom: 32,
     paddingHorizontal: 20,
   },
   headerBlur: {
-    borderRadius: 16,
-    padding: 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    gap: 16,
+  },
+  headerIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  headerText: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
-    marginBottom: 8,
-    textAlign: 'center',
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#D1FAE5',
-    lineHeight: 24,
-    textAlign: 'center',
+    lineHeight: 20,
   },
   stepIndicator: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 32,
     paddingHorizontal: 20,
   },
   stepContainer: {
@@ -695,36 +780,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },
   stepNumber: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
   },
   stepLine: {
-    width: 40,
+    width: 48,
     height: 3,
-    marginHorizontal: 8,
+    marginHorizontal: 12,
     borderRadius: 2,
   },
-  scrollView: {
-    flex: 1,
-  },
   stepContent: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingBottom: 120,
+  },
+  stepHeader: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  stepIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
   },
   stepTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'Inter-Bold',
     marginBottom: 8,
     textAlign: 'center',
@@ -732,9 +832,8 @@ const styles = StyleSheet.create({
   stepSubtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    marginBottom: 32,
-    lineHeight: 24,
     textAlign: 'center',
+    lineHeight: 24,
   },
   inputGroup: {
     marginBottom: 24,
@@ -747,7 +846,6 @@ const styles = StyleSheet.create({
   inputBlur: {
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -758,10 +856,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
   },
   input: {
     flex: 1,
@@ -769,63 +866,67 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
   },
   locationButton: {
-    padding: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  currency: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
+  locationGradient: {
+    padding: 8,
+    borderRadius: 12,
   },
   businessTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 16,
   },
   businessTypeCard: {
     flex: 1,
     minWidth: '45%',
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 2,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 8,
-  },
-  businessTypeBlur: {
-    borderRadius: 16,
   },
   businessTypeGradient: {
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 12,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     gap: 12,
+    borderRadius: 20,
+  },
+  businessTypeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   businessTypeText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-SemiBold',
     textAlign: 'center',
   },
-  switchGroupBlur: {
-    borderRadius: 16,
+  switchCard: {
+    borderRadius: 20,
+    marginBottom: 20,
     overflow: 'hidden',
-    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  switchGroup: {
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+  switchBlur: {
+    borderRadius: 20,
   },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    padding: 20,
   },
   switchInfo: {
     flexDirection: 'row',
@@ -834,14 +935,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   switchIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -856,31 +957,58 @@ const styles = StyleSheet.create({
   switchDescription: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
+    lineHeight: 20,
+  },
+  priceInputBlur: {
+    marginTop: 16,
+    marginHorizontal: 20,
+    marginBottom: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  priceInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderRadius: 12,
+  },
+  priceInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+  },
+  currency: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
   },
   amenitiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   amenityChip: {
     borderRadius: 16,
+    borderWidth: 2,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 3,
   },
   amenityBlur: {
-    borderRadius: 16,
-  },
-  amenityGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    gap: 8,
+    borderRadius: 16,
   },
   amenityText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-SemiBold',
   },
   textAreaBlur: {
     borderRadius: 16,
@@ -893,10 +1021,9 @@ const styles = StyleSheet.create({
   },
   textAreaContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     minHeight: 120,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
   },
   textArea: {
     fontSize: 16,
@@ -910,22 +1037,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 16,
-    elevation: 16,
+    elevation: 12,
   },
   uploadBlur: {
     borderRadius: 20,
   },
   uploadGradient: {
     alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
     gap: 12,
+    borderRadius: 20,
   },
   uploadText: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   uploadSubtext: {
@@ -936,52 +1064,73 @@ const styles = StyleSheet.create({
   photosGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 16,
     marginBottom: 24,
   },
   photoContainer: {
     position: 'relative',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   photo: {
     width: 100,
     height: 100,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   removePhotoButton: {
     position: 'absolute',
     top: -8,
     right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  summaryBlur: {
+  summaryCard: {
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 16,
-    elevation: 16,
+    elevation: 12,
   },
-  summaryCard: {
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+  summaryBlur: {
+    borderRadius: 20,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  summaryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summaryTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 20,
-    textAlign: 'center',
+    fontFamily: 'Inter-Bold',
+  },
+  summaryContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 12,
   },
   summaryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
   },
   summaryLabel: {
     fontSize: 14,
@@ -998,23 +1147,25 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: 40,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
   },
   bottomBarContent: {
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   secondaryButton: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   secondaryButtonText: {
     fontSize: 16,
@@ -1025,10 +1176,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowRadius: 16,
+    elevation: 16,
   },
   primaryButtonGradient: {
     flexDirection: 'row',

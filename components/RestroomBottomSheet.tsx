@@ -37,7 +37,7 @@ export function RestroomBottomSheet({
 }: RestroomBottomSheetProps) {
   const { colors, theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const animatedPosition = useSharedValue(0);
+  const animatedPosition = useSharedValue(-1);
 
   // Snap points for the bottom sheet
   const snapPoints = useMemo(() => ['25%', '50%', '90%'], []);
@@ -108,7 +108,7 @@ export function RestroomBottomSheet({
     const opacity = interpolate(
       animatedPosition.value,
       [-1, 0, 1, 2],
-      [0, 0.3, 0.5, 0.7],
+      [0, 0.2, 0.3, 0.4],
       Extrapolate.CLAMP
     );
     return {
@@ -132,7 +132,7 @@ export function RestroomBottomSheet({
         onChange={handleSheetChanges}
         enablePanDownToClose
         backgroundStyle={{
-          backgroundColor: 'transparent',
+          backgroundColor: colors.background,
         }}
         handleIndicatorStyle={{
           backgroundColor: colors.border,
@@ -141,21 +141,11 @@ export function RestroomBottomSheet({
         }}
       >
         <BottomSheetView style={styles.container}>
-          <BlurView
-            intensity={theme === 'light' ? 95 : 85}
-            style={styles.blurContainer}
-          >
-            <LinearGradient
-              colors={theme === 'light' 
-                ? ['rgba(255,255,255,0.95)', 'rgba(248,250,252,0.9)']
-                : ['rgba(15,23,42,0.95)', 'rgba(30,41,59,0.9)']
-              }
-              style={styles.gradient}
+          <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
+            <BottomSheetScrollView
+              contentContainerStyle={styles.content}
+              showsVerticalScrollIndicator={false}
             >
-              <BottomSheetScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-              >
                 {/* Header Section */}
                 <View style={styles.header}>
                   <View style={styles.headerLeft}>
@@ -187,9 +177,9 @@ export function RestroomBottomSheet({
 
                 {/* Status & Rating Cards */}
                 <View style={styles.cardRow}>
-                  <BlurView intensity={60} style={styles.card}>
+                  <View style={[styles.card, { backgroundColor: colors.surface }]}>
                     <LinearGradient
-                      colors={[`${statusInfo.color}20`, `${statusInfo.color}10`]}
+                      colors={[`${statusInfo.color}15`, `${statusInfo.color}08`]}
                       style={styles.cardGradient}
                     >
                       <statusInfo.icon size={20} color={statusInfo.color} strokeWidth={2} />
@@ -197,11 +187,11 @@ export function RestroomBottomSheet({
                         {statusInfo.text}
                       </Text>
                     </LinearGradient>
-                  </BlurView>
+                  </View>
 
-                  <BlurView intensity={60} style={styles.card}>
+                  <View style={[styles.card, { backgroundColor: colors.surface }]}>
                     <LinearGradient
-                      colors={['rgba(245, 158, 11, 0.2)', 'rgba(245, 158, 11, 0.1)']}
+                      colors={['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.08)']}
                       style={styles.cardGradient}
                     >
                       <Star size={20} color={colors.warning} fill={colors.warning} strokeWidth={2} />
@@ -212,12 +202,12 @@ export function RestroomBottomSheet({
                         ({restroom.reviews.length})
                       </Text>
                     </LinearGradient>
-                  </BlurView>
+                  </View>
 
                   {restroom.distance && (
-                    <BlurView intensity={60} style={styles.card}>
+                    <View style={[styles.card, { backgroundColor: colors.surface }]}>
                       <LinearGradient
-                        colors={[`${colors.primary}20`, `${colors.primary}10`]}
+                        colors={[`${colors.primary}15`, `${colors.primary}08`]}
                         style={styles.cardGradient}
                       >
                         <Navigation2 size={20} color={colors.primary} strokeWidth={2} />
@@ -225,15 +215,15 @@ export function RestroomBottomSheet({
                           {restroom.distance.toFixed(1)} км
                         </Text>
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   )}
                 </View>
 
                 {/* Quick Info Badges */}
                 <View style={styles.badgeContainer}>
-                  <BlurView intensity={50} style={styles.badge}>
+                  <View style={[styles.badge, { backgroundColor: colors.surface }]}>
                     <LinearGradient
-                      colors={[`${businessInfo.icon === Building ? colors.secondary : colors.primary}30`, `${businessInfo.icon === Building ? colors.secondary : colors.primary}20`]}
+                      colors={[`${businessInfo.icon === Building ? colors.secondary : colors.primary}20`, `${businessInfo.icon === Building ? colors.secondary : colors.primary}10`]}
                       style={styles.badgeGradient}
                     >
                       <businessInfo.icon size={14} color={businessInfo.icon === Building ? colors.secondary : colors.primary} strokeWidth={2} />
@@ -241,12 +231,12 @@ export function RestroomBottomSheet({
                         {businessInfo.text}
                       </Text>
                     </LinearGradient>
-                  </BlurView>
+                  </View>
 
                   {restroom.isPaid && (
-                    <BlurView intensity={50} style={styles.badge}>
+                    <View style={[styles.badge, { backgroundColor: colors.surface }]}>
                       <LinearGradient
-                        colors={['rgba(245, 158, 11, 0.3)', 'rgba(245, 158, 11, 0.2)']}
+                        colors={['rgba(245, 158, 11, 0.20)', 'rgba(245, 158, 11, 0.10)']}
                         style={styles.badgeGradient}
                       >
                         <Euro size={14} color={colors.warning} strokeWidth={2} />
@@ -254,13 +244,13 @@ export function RestroomBottomSheet({
                           {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
                         </Text>
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   )}
 
                   {restroom.accessibility && (
-                    <BlurView intensity={50} style={styles.badge}>
+                    <View style={[styles.badge, { backgroundColor: colors.surface }]}>
                       <LinearGradient
-                        colors={['rgba(16, 185, 129, 0.3)', 'rgba(16, 185, 129, 0.2)']}
+                        colors={['rgba(16, 185, 129, 0.20)', 'rgba(16, 185, 129, 0.10)']}
                         style={styles.badgeGradient}
                       >
                         <Accessibility size={14} color={colors.success} strokeWidth={2} />
@@ -268,12 +258,12 @@ export function RestroomBottomSheet({
                           Достъпно
                         </Text>
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   )}
 
-                  <BlurView intensity={50} style={styles.badge}>
+                  <View style={[styles.badge, { backgroundColor: colors.surface }]}>
                     <LinearGradient
-                      colors={[`${colors.textSecondary}30`, `${colors.textSecondary}20`]}
+                      colors={[`${colors.textSecondary}20`, `${colors.textSecondary}10`]}
                       style={styles.badgeGradient}
                     >
                       <Users size={14} color={colors.textSecondary} strokeWidth={2} />
@@ -281,13 +271,13 @@ export function RestroomBottomSheet({
                         {restroom.checkInCount} посещения
                       </Text>
                     </LinearGradient>
-                  </BlurView>
+                  </View>
                 </View>
 
                 {/* Cleanliness Rating */}
-                <BlurView intensity={60} style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.surface }]}>
                   <LinearGradient
-                    colors={[`${colors.surface}60`, `${colors.surface}40`]}
+                    colors={[`${colors.surface}90`, `${colors.surface}70`]}
                     style={styles.sectionGradient}
                   >
                     <View style={styles.sectionHeader}>
@@ -319,12 +309,12 @@ export function RestroomBottomSheet({
                       </View>
                     </View>
                   </LinearGradient>
-                </BlurView>
+                </View>
 
                 {/* Amenities Grid */}
-                <BlurView intensity={60} style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.surface }]}>
                   <LinearGradient
-                    colors={[`${colors.surface}60`, `${colors.surface}40`]}
+                    colors={[`${colors.surface}90`, `${colors.surface}70`]}
                     style={styles.sectionGradient}
                   >
                     <View style={styles.sectionHeader}>
@@ -337,9 +327,9 @@ export function RestroomBottomSheet({
                       {restroom.amenities.map((amenity, index) => {
                         const AmenityIcon = getAmenityIcon(amenity);
                         return (
-                          <BlurView key={index} intensity={40} style={styles.amenityChip}>
+                          <View key={index} style={[styles.amenityChip, { backgroundColor: colors.background }]}>
                             <LinearGradient
-                              colors={[`${colors.primary}25`, `${colors.primary}15`]}
+                              colors={[`${colors.primary}20`, `${colors.primary}10`]}
                               style={styles.amenityGradient}
                             >
                               <AmenityIcon size={16} color={colors.primary} strokeWidth={2} />
@@ -347,18 +337,18 @@ export function RestroomBottomSheet({
                                 {amenity}
                               </Text>
                             </LinearGradient>
-                          </BlurView>
+                          </View>
                         );
                       })}
                     </View>
                   </LinearGradient>
-                </BlurView>
+                </View>
 
                 {/* Photos Section */}
                 {restroom.photos.length > 0 && (
-                  <BlurView intensity={60} style={styles.section}>
+                  <View style={[styles.section, { backgroundColor: colors.surface }]}>
                     <LinearGradient
-                      colors={[`${colors.surface}60`, `${colors.surface}40`]}
+                      colors={[`${colors.surface}90`, `${colors.surface}70`]}
                       style={styles.sectionGradient}
                     >
                       <View style={styles.sectionHeader}>
@@ -380,13 +370,13 @@ export function RestroomBottomSheet({
                         </View>
                       </ScrollView>
                     </LinearGradient>
-                  </BlurView>
+                    </View>
                 )}
 
                 {/* Recent Reviews */}
-                <BlurView intensity={60} style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.surface }]}>
                   <LinearGradient
-                    colors={[`${colors.surface}60`, `${colors.surface}40`]}
+                    colors={[`${colors.surface}90`, `${colors.surface}70`]}
                     style={styles.sectionGradient}
                   >
                     <View style={styles.sectionHeader}>
@@ -396,9 +386,9 @@ export function RestroomBottomSheet({
                       </Text>
                     </View>
                     {restroom.reviews.slice(0, 2).map((review) => (
-                      <BlurView key={review.id} intensity={40} style={styles.reviewCard}>
+                      <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.background }]}>
                         <LinearGradient
-                          colors={[`${colors.surface}50`, `${colors.surface}30`]}
+                          colors={[`${colors.surface}80`, `${colors.surface}60`]}
                           style={styles.reviewGradient}
                         >
                           <View style={styles.reviewHeader}>
@@ -427,33 +417,33 @@ export function RestroomBottomSheet({
                             </View>
                           </View>
                         </LinearGradient>
-                      </BlurView>
+                      </View>
                     ))}
                   </LinearGradient>
-                </BlurView>
+                </View>
 
                 {/* Action Buttons */}
                 <View style={styles.actions}>
                   <TouchableOpacity style={styles.actionButton}>
-                    <BlurView intensity={60} style={styles.actionBlur}>
+                    <View style={[styles.actionContent, { backgroundColor: colors.surface }]}>
                       <LinearGradient
-                        colors={[`${colors.error}30`, `${colors.error}20`]}
+                        colors={[`${colors.error}25`, `${colors.error}15`]}
                         style={styles.actionGradient}
                       >
                         <Heart size={20} color={colors.error} strokeWidth={2} />
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   </TouchableOpacity>
                   
                   <TouchableOpacity style={styles.actionButton}>
-                    <BlurView intensity={60} style={styles.actionBlur}>
+                    <View style={[styles.actionContent, { backgroundColor: colors.surface }]}>
                       <LinearGradient
-                        colors={[`${colors.textSecondary}30`, `${colors.textSecondary}20`]}
+                        colors={[`${colors.textSecondary}25`, `${colors.textSecondary}15`]}
                         style={styles.actionGradient}
                       >
                         <Share size={20} color={colors.textSecondary} strokeWidth={2} />
                       </LinearGradient>
-                    </BlurView>
+                    </View>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -472,9 +462,8 @@ export function RestroomBottomSheet({
 
                 {/* Bottom Padding */}
                 <View style={styles.bottomPadding} />
-              </BottomSheetScrollView>
-            </LinearGradient>
-          </BlurView>
+            </BottomSheetScrollView>
+          </View>
         </BottomSheetView>
       </BottomSheet>
     </>
@@ -494,13 +483,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  blurContainer: {
-    flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-  },
-  gradient: {
+  contentContainer: {
     flex: 1,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -571,15 +554,18 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 16,
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardGradient: {
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 12,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
   },
   cardTitle: {
     fontSize: 16,
@@ -597,7 +583,11 @@ const styles = StyleSheet.create({
   },
   badge: {
     borderRadius: 12,
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   badgeGradient: {
     flexDirection: 'row',
@@ -605,8 +595,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
   },
   badgeText: {
     fontSize: 13,
@@ -614,13 +603,16 @@ const styles = StyleSheet.create({
   },
   section: {
     borderRadius: 20,
-    overflow: 'hidden',
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionGradient: {
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -662,7 +654,11 @@ const styles = StyleSheet.create({
   },
   amenityChip: {
     borderRadius: 12,
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   amenityGradient: {
     flexDirection: 'row',
@@ -670,8 +666,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
   },
   amenityText: {
     fontSize: 13,
@@ -703,13 +698,16 @@ const styles = StyleSheet.create({
   },
   reviewCard: {
     borderRadius: 16,
-    overflow: 'hidden',
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   reviewGradient: {
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -763,9 +761,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  actionBlur: {
+  actionContent: {
     flex: 1,
     borderRadius: 28,
   },
@@ -773,13 +775,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 28,
   },
   primaryButton: {
     flex: 1,
     borderRadius: 28,
-    overflow: 'hidden',
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
