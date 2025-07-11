@@ -123,9 +123,10 @@ export function RestroomBottomSheet({
 
   return (
     <>
-      <Animated.View style={[styles.backdrop, animatedBackdrop]} />
+      <Animated.View pointerEvents="none" style={[styles.backdrop, animatedBackdrop]} />
       <BottomSheet
         ref={bottomSheetRef}
+        style={{ elevation: 100, zIndex: 100 }}
         index={1}
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
