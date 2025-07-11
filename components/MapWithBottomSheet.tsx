@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import darkStyle from '@/constants/mapStyle';
@@ -65,11 +66,12 @@ export function MapWithBottomSheet({
   }, [searchQuery, restrooms]);
 
   const handleMarkerPress = (restroom: Restroom) => {
-    console.log('Marker pressed:', restroom.name);
+    console.log('🎯 Marker pressed:', restroom.name);
     setSelectedRestroom(restroom);
   };
 
   const closeBottomSheet = () => {
+    console.log('🔽 Closing bottom sheet');
     setSelectedRestroom(null);
   };
 
@@ -110,9 +112,9 @@ export function MapWithBottomSheet({
     const { latitude, longitude } = restroom.coordinates;
 
     if (Platform.OS === 'ios') {
-      console.log(`Opening Apple Maps to ${restroom.name}...`);
+      Alert.alert('Навигация', `Отваряне на Apple Maps към ${restroom.name}...`);
     } else if (Platform.OS === 'android') {
-      console.log(`Opening Google Maps to ${restroom.name}...`);
+      Alert.alert('Навигация', `Отваряне на Google Maps към ${restroom.name}...`);
     } else {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
       if (typeof window !== 'undefined') {
@@ -183,13 +185,9 @@ export function MapWithBottomSheet({
       
       <ClusteredMapView
         mapRef={(ref) => {
-          // the library expects this callback prop to receive the internal MapView ref
-          // so we set our own ref when it arrives
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           mapRef.current = ref;
         }}
-        ref={mapRef}
         style={{ flex: 1 }}
         provider={PROVIDER_GOOGLE}
         customMapStyle={theme === 'light' ? lightStyle : darkStyle}
@@ -206,11 +204,12 @@ export function MapWithBottomSheet({
         extent={512}
         nodeSize={64}
         onClusterPress={(cluster, markers) => {
-          console.log('Cluster pressed with', markers.length, 'markers');
+          console.log('🎯 Cluster pressed with', markers.length, 'markers');
           if (markers.length === 1) {
             // Single marker - show bottom sheet
             const restroom = markers[0].properties.restroom;
             if (restroom) {
+              console.log('🎯 Opening bottom sheet for:', restroom.name);
               handleMarkerPress(restroom);
             }
           } else {
@@ -237,7 +236,10 @@ export function MapWithBottomSheet({
                 latitude: marker.geometry.coordinates[1],
                 longitude: marker.geometry.coordinates[0],
               }}
-              onPress={() => handleMarkerPress(restroom)}
+              onPress={() => {
+                console.log('🎯 Direct marker press:', restroom.name);
+                handleMarkerPress(restroom);
+              }}
               tracksViewChanges={false}
             >
               <Pin restroom={restroom} />
@@ -252,7 +254,10 @@ export function MapWithBottomSheet({
               latitude: restroom.coordinates.latitude,
               longitude: restroom.coordinates.longitude,
             }}
-            onPress={() => handleMarkerPress(restroom)}
+            onPress={() => {
+              console.log('🎯 Filtered marker press:', restroom.name);
+              handleMarkerPress(restroom);
+            }}
             tracksViewChanges={false}
             properties={{ restroom }}
           >
@@ -270,13 +275,11 @@ export function MapWithBottomSheet({
 
       <FloatingMapControls />
 
-      {selectedRestroom && (
-        <RestroomBottomSheet
-          restroom={selectedRestroom}
-          onClose={closeBottomSheet}
-          onNavigate={() => openInMaps(selectedRestroom)}
-        />
-      )}
+      <RestroomBottomSheet
+        restroom={selectedRestroom}
+        onClose={closeBottomSheet}
+        onNavigate={openInMaps}
+      />
     </View>
   );
 }
