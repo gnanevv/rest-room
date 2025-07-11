@@ -182,6 +182,13 @@ export function MapWithBottomSheet({
       />
       
       <ClusteredMapView
+        mapRef={(ref) => {
+          // the library expects this callback prop to receive the internal MapView ref
+          // so we set our own ref when it arrives
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          mapRef.current = ref;
+        }}
         ref={mapRef}
         style={{ flex: 1 }}
         provider={PROVIDER_GOOGLE}
