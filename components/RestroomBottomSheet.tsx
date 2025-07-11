@@ -11,40 +11,7 @@ import {
 import BottomSheet, { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import {
-  MapPin,
-  Star,
-  Euro,
-  Accessibility,
-  Clock,
-  Users,
-  Camera,
-  Navigation2,
-  X,
-  Heart,
-  Share,
-  Phone,
-  Globe,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Wifi,
-  Car,
-  Baby,
-  Droplets,
-  Wind,
-  Music,
-  Shield,
-  Zap,
-  Coffee,
-  Utensils,
-  ShoppingBag,
-  Fuel,
-  Building,
-  TrendingUp,
-  Award,
-  ThumbsUp,
-} from 'lucide-react-native';
+import { MapPin, Star, Euro, Accessibility, Clock, Users, Camera, Navigation2, X, Heart, Share, Phone, Globe, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Circle as XCircle, Wifi, Car, Baby, Droplets, Wind, Music, Shield, Zap, Coffee, Utensils, ShoppingBag, Fuel, Building, TrendingUp, Award, ThumbsUp } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Restroom } from '@/types/restroom';
 import Animated, {
