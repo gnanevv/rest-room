@@ -8,19 +8,49 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import BottomSheet, { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetView,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { MapPin, Star, Euro, Accessibility, Clock, Users, Camera, Navigation2, X, Heart, Share, Phone, Globe, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Circle as XCircle, Wifi, Car, Baby, Droplets, Wind, Music, Shield, Zap, Coffee, Utensils, ShoppingBag, Fuel, Building, TrendingUp, Award, ThumbsUp } from 'lucide-react-native';
+import {
+  MapPin,
+  Star,
+  Euro,
+  Accessibility,
+  Clock,
+  Users,
+  Camera,
+  Navigation2,
+  X,
+  Heart,
+  Share,
+  Phone,
+  Globe,
+  CircleCheck as CheckCircle,
+  TriangleAlert as AlertTriangle,
+  Circle as XCircle,
+  Wifi,
+  Car,
+  Baby,
+  Droplets,
+  Wind,
+  Music,
+  Shield,
+  Zap,
+  Coffee,
+  Utensils,
+  ShoppingBag,
+  Fuel,
+  Building,
+  TrendingUp,
+  Award,
+  ThumbsUp,
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Restroom } from '@/types/restroom';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  interpolate,
-  Extrapolate,
-} from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
 
 interface RestroomBottomSheetProps {
   restroom: Restroom | null;
@@ -50,16 +80,24 @@ export function RestroomBottomSheet({
     }
   }, [restroom]);
 
-  const handleSheetChanges = useCallback((index: number) => {
-    if (index === -1) {
-      onClose();
-    }
-    animatedPosition.value = index;
-  }, [onClose]);
+  const handleSheetChanges = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+      }
+      animatedPosition.value = index;
+    },
+    [onClose]
+  );
 
   const getStatusInfo = () => {
-    if (!restroom) return { icon: CheckCircle, text: 'Unknown', color: colors.textSecondary };
-    
+    if (!restroom)
+      return {
+        icon: CheckCircle,
+        text: 'Unknown',
+        color: colors.textSecondary,
+      };
+
     if (restroom.availability === 'out_of_order') {
       return { icon: XCircle, text: 'Неработещо', color: colors.error };
     }
@@ -71,50 +109,44 @@ export function RestroomBottomSheet({
 
   const getBusinessTypeInfo = () => {
     if (!restroom) return { icon: Building, text: 'Unknown' };
-    
+
     switch (restroom.businessType) {
-      case 'restaurant': return { icon: Utensils, text: 'Ресторант' };
-      case 'cafe': return { icon: Coffee, text: 'Кафе' };
-      case 'bar': return { icon: Coffee, text: 'Бар' };
-      case 'mall': return { icon: ShoppingBag, text: 'Мол' };
-      case 'gas_station': return { icon: Fuel, text: 'Бензиностанция' };
-      default: return { icon: Building, text: 'Обществено' };
+      case 'restaurant':
+        return { icon: Utensils, text: 'Ресторант' };
+      case 'cafe':
+        return { icon: Coffee, text: 'Кафе' };
+      case 'bar':
+        return { icon: Coffee, text: 'Бар' };
+      case 'mall':
+        return { icon: ShoppingBag, text: 'Мол' };
+      case 'gas_station':
+        return { icon: Fuel, text: 'Бензиностанция' };
+      default:
+        return { icon: Building, text: 'Обществено' };
     }
   };
 
   const getAmenityIcon = (amenity: string) => {
     const amenityMap: Record<string, any> = {
       'Тоалетна хартия': Droplets,
-      'Сапун': Droplets,
-      'Дезинфектант': Shield,
-      'Сешоар': Wind,
-      'Огледало': Users,
-      'Пеленачка': Baby,
-      'Климатик': Wind,
-      'Музика': Music,
-      'WiFi': Wifi,
-      'Паркинг': Car,
+      Сапун: Droplets,
+      Дезинфектант: Shield,
+      Сешоар: Wind,
+      Огледало: Users,
+      Пеленачка: Baby,
+      Климатик: Wind,
+      Музика: Music,
+      WiFi: Wifi,
+      Паркинг: Car,
       'Wheelchair accessible': Accessibility,
       'Baby changing station': Baby,
       'Hand sanitizer': Shield,
       'Premium toiletries': Star,
       'Air conditioning': Wind,
-      'Mirror': Users,
+      Mirror: Users,
     };
     return amenityMap[amenity] || CheckCircle;
   };
-
-  const animatedBackdrop = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      animatedPosition.value,
-      [-1, 0, 1, 2],
-      [0, 0.2, 0.3, 0.4],
-      Extrapolate.CLAMP
-    );
-    return {
-      opacity: withSpring(opacity),
-    };
-  });
 
   if (!restroom) return null;
 
@@ -123,7 +155,6 @@ export function RestroomBottomSheet({
 
   return (
     <>
-      <Animated.View pointerEvents="none" style={[styles.backdrop, animatedBackdrop]} />
       <BottomSheet
         ref={bottomSheetRef}
         style={{ elevation: 100, zIndex: 100 }}
@@ -141,327 +172,519 @@ export function RestroomBottomSheet({
         }}
       >
         <BottomSheetView style={styles.container}>
-          <View style={[styles.contentContainer, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.contentContainer,
+              { backgroundColor: colors.background },
+            ]}
+          >
             <BottomSheetScrollView
               contentContainerStyle={styles.content}
               showsVerticalScrollIndicator={false}
             >
-                {/* Header Section */}
-                <View style={styles.header}>
-                  <View style={styles.headerLeft}>
-                    <LinearGradient
-                      colors={[statusInfo.color, `${statusInfo.color}CC`]}
-                      style={styles.statusIndicator}
-                    >
-                      <statusInfo.icon size={16} color="#FFFFFF" strokeWidth={2.5} />
-                    </LinearGradient>
-                    <View style={styles.headerText}>
-                      <Text style={[styles.title, { color: colors.text }]}>
-                        {restroom.name}
-                      </Text>
-                      <View style={styles.addressRow}>
-                        <MapPin size={14} color={colors.textSecondary} strokeWidth={2} />
-                        <Text style={[styles.address, { color: colors.textSecondary }]}>
-                          {restroom.address}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.closeButton, { backgroundColor: `${colors.surface}90` }]}
-                    onPress={onClose}
-                  >
-                    <X size={18} color={colors.textSecondary} strokeWidth={2} />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Status & Rating Cards */}
-                <View style={styles.cardRow}>
-                  <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                    <LinearGradient
-                      colors={[`${statusInfo.color}15`, `${statusInfo.color}08`]}
-                      style={styles.cardGradient}
-                    >
-                      <statusInfo.icon size={20} color={statusInfo.color} strokeWidth={2} />
-                      <Text style={[styles.cardTitle, { color: statusInfo.color }]}>
-                        {statusInfo.text}
-                      </Text>
-                    </LinearGradient>
-                  </View>
-
-                  <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                    <LinearGradient
-                      colors={['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.08)']}
-                      style={styles.cardGradient}
-                    >
-                      <Star size={20} color={colors.warning} fill={colors.warning} strokeWidth={2} />
-                      <Text style={[styles.cardTitle, { color: colors.warning }]}>
-                        {restroom.rating.toFixed(1)}
-                      </Text>
-                      <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-                        ({restroom.reviews.length})
-                      </Text>
-                    </LinearGradient>
-                  </View>
-
-                  {restroom.distance && (
-                    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                      <LinearGradient
-                        colors={[`${colors.primary}15`, `${colors.primary}08`]}
-                        style={styles.cardGradient}
-                      >
-                        <Navigation2 size={20} color={colors.primary} strokeWidth={2} />
-                        <Text style={[styles.cardTitle, { color: colors.primary }]}>
-                          {restroom.distance.toFixed(1)} км
-                        </Text>
-                      </LinearGradient>
-                    </View>
-                  )}
-                </View>
-
-                {/* Quick Info Badges */}
-                <View style={styles.badgeContainer}>
-                  <View style={[styles.badge, { backgroundColor: colors.surface }]}>
-                    <LinearGradient
-                      colors={[`${businessInfo.icon === Building ? colors.secondary : colors.primary}20`, `${businessInfo.icon === Building ? colors.secondary : colors.primary}10`]}
-                      style={styles.badgeGradient}
-                    >
-                      <businessInfo.icon size={14} color={businessInfo.icon === Building ? colors.secondary : colors.primary} strokeWidth={2} />
-                      <Text style={[styles.badgeText, { color: businessInfo.icon === Building ? colors.secondary : colors.primary }]}>
-                        {businessInfo.text}
-                      </Text>
-                    </LinearGradient>
-                  </View>
-
-                  {restroom.isPaid && (
-                    <View style={[styles.badge, { backgroundColor: colors.surface }]}>
-                      <LinearGradient
-                        colors={['rgba(245, 158, 11, 0.20)', 'rgba(245, 158, 11, 0.10)']}
-                        style={styles.badgeGradient}
-                      >
-                        <Euro size={14} color={colors.warning} strokeWidth={2} />
-                        <Text style={[styles.badgeText, { color: colors.warning }]}>
-                          {typeof restroom.price === 'number' ? restroom.price.toFixed(2) : '0.00'} лв
-                        </Text>
-                      </LinearGradient>
-                    </View>
-                  )}
-
-                  {restroom.accessibility && (
-                    <View style={[styles.badge, { backgroundColor: colors.surface }]}>
-                      <LinearGradient
-                        colors={['rgba(16, 185, 129, 0.20)', 'rgba(16, 185, 129, 0.10)']}
-                        style={styles.badgeGradient}
-                      >
-                        <Accessibility size={14} color={colors.success} strokeWidth={2} />
-                        <Text style={[styles.badgeText, { color: colors.success }]}>
-                          Достъпно
-                        </Text>
-                      </LinearGradient>
-                    </View>
-                  )}
-
-                  <View style={[styles.badge, { backgroundColor: colors.surface }]}>
-                    <LinearGradient
-                      colors={[`${colors.textSecondary}20`, `${colors.textSecondary}10`]}
-                      style={styles.badgeGradient}
-                    >
-                      <Users size={14} color={colors.textSecondary} strokeWidth={2} />
-                      <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
-                        {restroom.checkInCount} посещения
-                      </Text>
-                    </LinearGradient>
-                  </View>
-                </View>
-
-                {/* Cleanliness Rating */}
-                <View style={[styles.section, { backgroundColor: colors.surface }]}>
+              {/* Header Section */}
+              <View style={styles.header}>
+                <View style={styles.headerLeft}>
                   <LinearGradient
-                    colors={[`${colors.surface}90`, `${colors.surface}70`]}
-                    style={styles.sectionGradient}
+                    colors={[statusInfo.color, `${statusInfo.color}CC`]}
+                    style={styles.statusIndicator}
                   >
-                    <View style={styles.sectionHeader}>
-                      <Droplets size={20} color={colors.success} strokeWidth={2} />
-                      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                        Чистота и качество
+                    <statusInfo.icon
+                      size={16}
+                      color="#FFFFFF"
+                      strokeWidth={2.5}
+                    />
+                  </LinearGradient>
+                  <View style={styles.headerText}>
+                    <Text style={[styles.title, { color: colors.text }]}>
+                      {restroom.name}
+                    </Text>
+                    <View style={styles.addressRow}>
+                      <MapPin
+                        size={14}
+                        color={colors.textSecondary}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        style={[
+                          styles.address,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {restroom.address}
                       </Text>
                     </View>
-                    <View style={styles.cleanlinessRow}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          size={24}
-                          color={star <= restroom.cleanliness ? colors.success : colors.border}
-                          fill={star <= restroom.cleanliness ? colors.success : 'transparent'}
-                          strokeWidth={2}
-                        />
-                      ))}
-                      <Text style={[styles.cleanlinessText, { color: colors.text }]}>
-                        {restroom.cleanliness}/5
-                      </Text>
-                    </View>
-                    <View style={styles.progressBar}>
-                      <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-                        <LinearGradient
-                          colors={[colors.success, `${colors.success}CC`]}
-                          style={[styles.progressFill, { width: `${(restroom.cleanliness / 5) * 100}%` }]}
-                        />
-                      </View>
-                    </View>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.closeButton,
+                    { backgroundColor: `${colors.surface}90` },
+                  ]}
+                  onPress={onClose}
+                >
+                  <X size={18} color={colors.textSecondary} strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Status & Rating Cards */}
+              <View style={styles.cardRow}>
+                <View
+                  style={[styles.card, { backgroundColor: colors.surface }]}
+                >
+                  <LinearGradient
+                    colors={[`${statusInfo.color}15`, `${statusInfo.color}08`]}
+                    style={styles.cardGradient}
+                  >
+                    <statusInfo.icon
+                      size={20}
+                      color={statusInfo.color}
+                      strokeWidth={2}
+                    />
+                    <Text
+                      style={[styles.cardTitle, { color: statusInfo.color }]}
+                    >
+                      {statusInfo.text}
+                    </Text>
                   </LinearGradient>
                 </View>
 
-                {/* Amenities Grid */}
-                <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                <View
+                  style={[styles.card, { backgroundColor: colors.surface }]}
+                >
                   <LinearGradient
-                    colors={[`${colors.surface}90`, `${colors.surface}70`]}
-                    style={styles.sectionGradient}
+                    colors={[
+                      'rgba(245, 158, 11, 0.15)',
+                      'rgba(245, 158, 11, 0.08)',
+                    ]}
+                    style={styles.cardGradient}
                   >
-                    <View style={styles.sectionHeader}>
-                      <Award size={20} color={colors.primary} strokeWidth={2} />
-                      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                        Удобства
-                      </Text>
-                    </View>
-                    <View style={styles.amenitiesGrid}>
-                      {restroom.amenities.map((amenity, index) => {
-                        const AmenityIcon = getAmenityIcon(amenity);
-                        return (
-                          <View key={index} style={[styles.amenityChip, { backgroundColor: colors.background }]}>
-                            <LinearGradient
-                              colors={[`${colors.primary}20`, `${colors.primary}10`]}
-                              style={styles.amenityGradient}
-                            >
-                              <AmenityIcon size={16} color={colors.primary} strokeWidth={2} />
-                              <Text style={[styles.amenityText, { color: colors.primary }]}>
-                                {amenity}
-                              </Text>
-                            </LinearGradient>
-                          </View>
-                        );
-                      })}
-                    </View>
+                    <Star
+                      size={20}
+                      color={colors.warning}
+                      fill={colors.warning}
+                      strokeWidth={2}
+                    />
+                    <Text style={[styles.cardTitle, { color: colors.warning }]}>
+                      {restroom.rating.toFixed(1)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.cardSubtitle,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      ({restroom.reviews.length})
+                    </Text>
                   </LinearGradient>
                 </View>
 
-                {/* Photos Section */}
-                {restroom.photos.length > 0 && (
-                  <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                {restroom.distance && (
+                  <View
+                    style={[styles.card, { backgroundColor: colors.surface }]}
+                  >
                     <LinearGradient
-                      colors={[`${colors.surface}90`, `${colors.surface}70`]}
-                      style={styles.sectionGradient}
+                      colors={[`${colors.primary}15`, `${colors.primary}08`]}
+                      style={styles.cardGradient}
                     >
-                      <View style={styles.sectionHeader}>
-                        <Camera size={20} color={colors.secondary} strokeWidth={2} />
-                        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                          Снимки ({restroom.photos.length})
-                        </Text>
-                      </View>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <View style={styles.photosContainer}>
-                          {restroom.photos.map((photo, index) => (
-                            <View key={index} style={styles.photoWrapper}>
-                              <Image source={{ uri: photo }} style={styles.photo} />
-                              <BlurView intensity={30} style={styles.photoOverlay}>
-                                <Camera size={14} color="#FFFFFF" strokeWidth={2} />
-                              </BlurView>
-                            </View>
-                          ))}
-                        </View>
-                      </ScrollView>
+                      <Navigation2
+                        size={20}
+                        color={colors.primary}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        style={[styles.cardTitle, { color: colors.primary }]}
+                      >
+                        {restroom.distance.toFixed(1)} км
+                      </Text>
                     </LinearGradient>
-                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Quick Info Badges */}
+              <View style={styles.badgeContainer}>
+                <View
+                  style={[styles.badge, { backgroundColor: colors.surface }]}
+                >
+                  <LinearGradient
+                    colors={[
+                      `${
+                        businessInfo.icon === Building
+                          ? colors.secondary
+                          : colors.primary
+                      }20`,
+                      `${
+                        businessInfo.icon === Building
+                          ? colors.secondary
+                          : colors.primary
+                      }10`,
+                    ]}
+                    style={styles.badgeGradient}
+                  >
+                    <businessInfo.icon
+                      size={14}
+                      color={
+                        businessInfo.icon === Building
+                          ? colors.secondary
+                          : colors.primary
+                      }
+                      strokeWidth={2}
+                    />
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        {
+                          color:
+                            businessInfo.icon === Building
+                              ? colors.secondary
+                              : colors.primary,
+                        },
+                      ]}
+                    >
+                      {businessInfo.text}
+                    </Text>
+                  </LinearGradient>
+                </View>
+
+                {restroom.isPaid && (
+                  <View
+                    style={[styles.badge, { backgroundColor: colors.surface }]}
+                  >
+                    <LinearGradient
+                      colors={[
+                        'rgba(245, 158, 11, 0.20)',
+                        'rgba(245, 158, 11, 0.10)',
+                      ]}
+                      style={styles.badgeGradient}
+                    >
+                      <Euro size={14} color={colors.warning} strokeWidth={2} />
+                      <Text
+                        style={[styles.badgeText, { color: colors.warning }]}
+                      >
+                        {typeof restroom.price === 'number'
+                          ? restroom.price.toFixed(2)
+                          : '0.00'}{' '}
+                        лв
+                      </Text>
+                    </LinearGradient>
+                  </View>
                 )}
 
-                {/* Recent Reviews */}
-                <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                {restroom.accessibility && (
+                  <View
+                    style={[styles.badge, { backgroundColor: colors.surface }]}
+                  >
+                    <LinearGradient
+                      colors={[
+                        'rgba(16, 185, 129, 0.20)',
+                        'rgba(16, 185, 129, 0.10)',
+                      ]}
+                      style={styles.badgeGradient}
+                    >
+                      <Accessibility
+                        size={14}
+                        color={colors.success}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        style={[styles.badgeText, { color: colors.success }]}
+                      >
+                        Достъпно
+                      </Text>
+                    </LinearGradient>
+                  </View>
+                )}
+
+                <View
+                  style={[styles.badge, { backgroundColor: colors.surface }]}
+                >
+                  <LinearGradient
+                    colors={[
+                      `${colors.textSecondary}20`,
+                      `${colors.textSecondary}10`,
+                    ]}
+                    style={styles.badgeGradient}
+                  >
+                    <Users
+                      size={14}
+                      color={colors.textSecondary}
+                      strokeWidth={2}
+                    />
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {restroom.checkInCount} посещения
+                    </Text>
+                  </LinearGradient>
+                </View>
+              </View>
+
+              {/* Cleanliness Rating */}
+              <View
+                style={[styles.section, { backgroundColor: colors.surface }]}
+              >
+                <LinearGradient
+                  colors={[`${colors.surface}90`, `${colors.surface}70`]}
+                  style={styles.sectionGradient}
+                >
+                  <View style={styles.sectionHeader}>
+                    <Droplets
+                      size={20}
+                      color={colors.success}
+                      strokeWidth={2}
+                    />
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Чистота и качество
+                    </Text>
+                  </View>
+                  <View style={styles.cleanlinessRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={24}
+                        color={
+                          star <= restroom.cleanliness
+                            ? colors.success
+                            : colors.border
+                        }
+                        fill={
+                          star <= restroom.cleanliness
+                            ? colors.success
+                            : 'transparent'
+                        }
+                        strokeWidth={2}
+                      />
+                    ))}
+                    <Text
+                      style={[styles.cleanlinessText, { color: colors.text }]}
+                    >
+                      {restroom.cleanliness}/5
+                    </Text>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <View
+                      style={[
+                        styles.progressTrack,
+                        { backgroundColor: colors.border },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={[colors.success, `${colors.success}CC`]}
+                        style={[
+                          styles.progressFill,
+                          { width: `${(restroom.cleanliness / 5) * 100}%` },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+
+              {/* Amenities Grid */}
+              <View
+                style={[styles.section, { backgroundColor: colors.surface }]}
+              >
+                <LinearGradient
+                  colors={[`${colors.surface}90`, `${colors.surface}70`]}
+                  style={styles.sectionGradient}
+                >
+                  <View style={styles.sectionHeader}>
+                    <Award size={20} color={colors.primary} strokeWidth={2} />
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Удобства
+                    </Text>
+                  </View>
+                  <View style={styles.amenitiesGrid}>
+                    {restroom.amenities.map((amenity, index) => {
+                      const AmenityIcon = getAmenityIcon(amenity);
+                      return (
+                        <View
+                          key={index}
+                          style={[
+                            styles.amenityChip,
+                            { backgroundColor: colors.background },
+                          ]}
+                        >
+                          <LinearGradient
+                            colors={[
+                              `${colors.primary}20`,
+                              `${colors.primary}10`,
+                            ]}
+                            style={styles.amenityGradient}
+                          >
+                            <AmenityIcon
+                              size={16}
+                              color={colors.primary}
+                              strokeWidth={2}
+                            />
+                            <Text
+                              style={[
+                                styles.amenityText,
+                                { color: colors.primary },
+                              ]}
+                            >
+                              {amenity}
+                            </Text>
+                          </LinearGradient>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </LinearGradient>
+              </View>
+
+              {/* Photos Section */}
+              {restroom.photos.length > 0 && (
+                <View
+                  style={[styles.section, { backgroundColor: colors.surface }]}
+                >
                   <LinearGradient
                     colors={[`${colors.surface}90`, `${colors.surface}70`]}
                     style={styles.sectionGradient}
                   >
                     <View style={styles.sectionHeader}>
-                      <ThumbsUp size={20} color={colors.warning} strokeWidth={2} />
-                      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                        Последни отзиви
+                      <Camera
+                        size={20}
+                        color={colors.secondary}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        style={[styles.sectionTitle, { color: colors.text }]}
+                      >
+                        Снимки ({restroom.photos.length})
                       </Text>
                     </View>
-                    {restroom.reviews.slice(0, 2).map((review) => (
-                      <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.background }]}>
-                        <LinearGradient
-                          colors={[`${colors.surface}80`, `${colors.surface}60`]}
-                          style={styles.reviewGradient}
-                        >
-                          <View style={styles.reviewHeader}>
-                            <Text style={[styles.reviewAuthor, { color: colors.text }]}>
-                              {review.userName}
-                            </Text>
-                            <View style={styles.reviewRating}>
-                              <Star size={14} color={colors.warning} fill={colors.warning} strokeWidth={2} />
-                              <Text style={[styles.reviewRatingText, { color: colors.warning }]}>
-                                {review.rating}
-                              </Text>
-                            </View>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    >
+                      <View style={styles.photosContainer}>
+                        {restroom.photos.map((photo, index) => (
+                          <View key={index} style={styles.photoWrapper}>
+                            <Image
+                              source={{ uri: photo }}
+                              style={styles.photo}
+                            />
+                            <BlurView
+                              intensity={30}
+                              style={styles.photoOverlay}
+                            >
+                              <Camera
+                                size={14}
+                                color="#FFFFFF"
+                                strokeWidth={2}
+                              />
+                            </BlurView>
                           </View>
-                          <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>
-                            {review.comment}
-                          </Text>
-                          <View style={styles.reviewFooter}>
-                            <Text style={[styles.reviewDate, { color: colors.textTertiary }]}>
-                              {new Date(review.createdAt).toLocaleDateString('bg-BG')}
-                            </Text>
-                            <View style={styles.reviewHelpful}>
-                              <ThumbsUp size={12} color={colors.textTertiary} strokeWidth={2} />
-                              <Text style={[styles.reviewHelpfulText, { color: colors.textTertiary }]}>
-                                {review.helpful}
-                              </Text>
-                            </View>
-                          </View>
-                        </LinearGradient>
+                        ))}
                       </View>
-                    ))}
+                    </ScrollView>
                   </LinearGradient>
                 </View>
+              )}
 
-                {/* Action Buttons */}
-                <View style={styles.actions}>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <View style={[styles.actionContent, { backgroundColor: colors.surface }]}>
-                      <LinearGradient
-                        colors={[`${colors.error}25`, `${colors.error}15`]}
-                        style={styles.actionGradient}
-                      >
-                        <Heart size={20} color={colors.error} strokeWidth={2} />
-                      </LinearGradient>
-                    </View>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.actionButton}>
-                    <View style={[styles.actionContent, { backgroundColor: colors.surface }]}>
-                      <LinearGradient
-                        colors={[`${colors.textSecondary}25`, `${colors.textSecondary}15`]}
-                        style={styles.actionGradient}
-                      >
-                        <Share size={20} color={colors.textSecondary} strokeWidth={2} />
-                      </LinearGradient>
-                    </View>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={() => onNavigate(restroom)}
-                  >
-                    <LinearGradient
-                      colors={[colors.primary, colors.primaryDark]}
-                      style={styles.primaryGradient}
+              {/* Recent Reviews */}
+              <View
+                style={[styles.section, { backgroundColor: colors.surface }]}
+              >
+                <LinearGradient
+                  colors={[`${colors.surface}90`, `${colors.surface}70`]}
+                  style={styles.sectionGradient}
+                >
+                  <View style={styles.sectionHeader}>
+                    <ThumbsUp
+                      size={20}
+                      color={colors.warning}
+                      strokeWidth={2}
+                    />
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                      Последни отзиви
+                    </Text>
+                  </View>
+                  {restroom.reviews.slice(0, 2).map((review) => (
+                    <View
+                      key={review.id}
+                      style={[
+                        styles.reviewCard,
+                        { backgroundColor: colors.background },
+                      ]}
                     >
-                      <Navigation2 size={20} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={styles.primaryButtonText}>Навигация</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Bottom Padding */}
-                <View style={styles.bottomPadding} />
+                      <LinearGradient
+                        colors={[`${colors.surface}80`, `${colors.surface}60`]}
+                        style={styles.reviewGradient}
+                      >
+                        <View style={styles.reviewHeader}>
+                          <Text
+                            style={[
+                              styles.reviewAuthor,
+                              { color: colors.text },
+                            ]}
+                          >
+                            {review.userName}
+                          </Text>
+                          <View style={styles.reviewRating}>
+                            <Star
+                              size={14}
+                              color={colors.warning}
+                              fill={colors.warning}
+                              strokeWidth={2}
+                            />
+                            <Text
+                              style={[
+                                styles.reviewRatingText,
+                                { color: colors.warning },
+                              ]}
+                            >
+                              {review.rating}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.reviewComment,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {review.comment}
+                        </Text>
+                        <View style={styles.reviewFooter}>
+                          <Text
+                            style={[
+                              styles.reviewDate,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            {new Date(review.createdAt).toLocaleDateString(
+                              'bg-BG'
+                            )}
+                          </Text>
+                          <View style={styles.reviewHelpful}>
+                            <ThumbsUp
+                              size={12}
+                              color={colors.textTertiary}
+                              strokeWidth={2}
+                            />
+                            <Text
+                              style={[
+                                styles.reviewHelpfulText,
+                                { color: colors.textTertiary },
+                              ]}
+                            >
+                              {review.helpful}
+                            </Text>
+                          </View>
+                        </View>
+                      </LinearGradient>
+                    </View>
+                  ))}
+                </LinearGradient>
+              </View>
+              {/* Bottom Padding */}
+              <View style={styles.bottomPadding} />
             </BottomSheetScrollView>
           </View>
         </BottomSheetView>
@@ -471,15 +694,6 @@ export function RestroomBottomSheet({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 1,
-  },
   container: {
     flex: 1,
   },
@@ -491,6 +705,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
@@ -561,6 +776,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardGradient: {
+    flex: 1,
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 12,

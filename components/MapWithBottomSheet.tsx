@@ -14,11 +14,7 @@ import { BlurView } from 'expo-blur';
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
-import {
-  ZoomIn,
-  ZoomOut,
-  Locate,
-} from 'lucide-react-native';
+import { ZoomIn, ZoomOut, Locate } from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 import { useTheme } from '@/hooks/useTheme';
 import { RestroomBottomSheet } from '@/components/RestroomBottomSheet';
@@ -40,9 +36,12 @@ export function MapWithBottomSheet({
   userLocation,
 }: MapWithBottomSheetProps) {
   const { colors, theme } = useTheme();
-  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(null);
+  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(restrooms);
+  const [filteredRestrooms, setFilteredRestrooms] =
+    useState<Restroom[]>(restrooms);
   const [mapRegion, setMapRegion] = useState({
     latitude: userLocation?.latitude || 42.6977,
     longitude: userLocation?.longitude || 23.3219,
@@ -56,10 +55,11 @@ export function MapWithBottomSheet({
     if (searchQuery.trim() === '') {
       setFilteredRestrooms(restrooms);
     } else {
-      const filtered = restrooms.filter(restroom =>
-        restroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        restroom.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        restroom.city.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = restrooms.filter(
+        (restroom) =>
+          restroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          restroom.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          restroom.city.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredRestrooms(filtered);
     }
@@ -112,9 +112,15 @@ export function MapWithBottomSheet({
     const { latitude, longitude } = restroom.coordinates;
 
     if (Platform.OS === 'ios') {
-      Alert.alert('Навигация', `Отваряне на Apple Maps към ${restroom.name}...`);
+      Alert.alert(
+        'Навигация',
+        `Отваряне на Apple Maps към ${restroom.name}...`
+      );
     } else if (Platform.OS === 'android') {
-      Alert.alert('Навигация', `Отваряне на Google Maps към ${restroom.name}...`);
+      Alert.alert(
+        'Навигация',
+        `Отваряне на Google Maps към ${restroom.name}...`
+      );
     } else {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
       if (typeof window !== 'undefined') {
@@ -182,7 +188,7 @@ export function MapWithBottomSheet({
         backgroundColor="transparent"
         translucent
       />
-      
+
       <ClusteredMapView
         mapRef={(ref) => {
           // @ts-ignore
@@ -204,21 +210,20 @@ export function MapWithBottomSheet({
         extent={512}
         nodeSize={64}
         onClusterPress={(cluster, markers) => {
-          console.log('🎯 Cluster pressed with', markers.length, 'markers');
-          if (markers.length === 1) {
+          console.log('🎯 Cluster pressed with', markers?.length, 'markers');
+          if (markers?.length === 1) {
             // Single marker - show bottom sheet
             const restroom = markers[0].properties.restroom;
             if (restroom) {
-              console.log('🎯 Opening bottom sheet for:', restroom.name);
               handleMarkerPress(restroom);
             }
           } else {
             // Multiple markers - zoom in
-            const coordinates = markers.map(marker => ({
+            const coordinates = markers?.map((marker) => ({
               latitude: marker.geometry.coordinates[1],
               longitude: marker.geometry.coordinates[0],
             }));
-            
+
             if (mapRef.current) {
               mapRef.current.fitToCoordinates(coordinates, {
                 edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
@@ -259,7 +264,6 @@ export function MapWithBottomSheet({
               handleMarkerPress(restroom);
             }}
             tracksViewChanges={false}
-            properties={{ restroom }}
           >
             <Pin restroom={restroom} />
           </Marker>

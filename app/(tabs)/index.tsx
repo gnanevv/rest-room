@@ -8,7 +8,9 @@ import * as Location from 'expo-location';
 
 export default function MapScreen() {
   const { colors } = useTheme();
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
+  );
   const [restrooms, setRestrooms] = useState<Restroom[]>(mockRestrooms);
 
   useEffect(() => {
@@ -70,7 +72,10 @@ export default function MapScreen() {
       } else {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Разрешение за локация', 'Нужен е достъп до локацията за да показваме най-близките тоалетни.');
+          Alert.alert(
+            'Разрешение за локация',
+            'Нужен е достъп до локацията за да показваме най-близките тоалетни.'
+          );
           return;
         }
 
@@ -99,10 +104,14 @@ export default function MapScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <MapWithBottomSheet
         restrooms={restrooms}
-        userLocation={location ? {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        } : undefined}
+        userLocation={
+          location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }
+            : undefined
+        }
       />
     </View>
   );
