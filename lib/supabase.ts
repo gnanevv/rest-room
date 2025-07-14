@@ -1,11 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
+import Constants from 'expo-constants';
 
-// These would normally come from environment variables
-// For demo purposes, using placeholder values
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseAnonKey = 'your-anon-key';
+// Get keys from app.config extra so that we don't commit secrets
+const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl as string;
+const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey as string;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('⚠️  Supabase keys are missing. Add them to app.json → expo.extra');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // we run without user auth/session
+  },
+});
 
 // Database schema for restrooms table:
 /*

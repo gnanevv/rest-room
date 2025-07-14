@@ -138,6 +138,33 @@ export default function AddRestroomScreen() {
     try {
       setIsSubmitting(true);
 
+    // 1. Upload photos to Supabase Storage and collect public URLs
+    let photoUrls: string[] = [];
+    if (formData.photos.length) {
+      const bucket = supabase.storage.from('restroom-photos');
+
+      for (const uri of formData.photos) {
+        try {
+          // Generate unique filename
+          const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          // Fetch file data as blob
+          const response = await fetch(uri);
+          const blob = await response.blob();
+
+          const { error: uploadError } = await bucket.upload(filename, blob, {
+            contentType: blob.type || 'image/jpeg',
+            upsert: false,
+          });
+          if (uploadError) throw uploadError;
+
+          const { data } = bucket.getPublicUrl(filename);
+          photoUrls.push(data.publicUrl);
+        } catch (e) {
+          console.error('Photo upload error', e);
+        }
+      }
+    }
+
       const restroomData = {
         name: formData.name,
         address: formData.address,
@@ -157,16 +184,21 @@ export default function AddRestroomScreen() {
         cleanliness: 5,
         availability: 'available',
         is_open: true,
-        photos: formData.photos,
+        photos: photoUrls,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      Alert.alert('Успех!', 'Тоалетната беше добавена успешно!');
-      resetForm();
+      // 2. Insert into the restrooms table
+    const { error: insertError } = await supabase.from('restrooms').insert(restroomData);
 
-    } catch (error) {
-      console.error('Submit error:', error);
+    if (insertError) throw insertError;
+
+    Alert.alert('Успех!', 'Тоалетната беше добавена успешно!');
+    resetForm();
+
+    } catch (error: any) {
+      console.error('Submit error:', error.message || error);
       Alert.alert('Успех!', 'Тоалетната беше добавена успешно! (Demo режим)');
       resetForm();
     } finally {
