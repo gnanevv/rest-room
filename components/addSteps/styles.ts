@@ -89,6 +89,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
   },
+  textAreaContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    minHeight: 120,
+    borderRadius: 16,
+  },
+  textArea: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    flex: 1,
+    textAlignVertical: 'top',
+  },
+  amenityGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  amenityChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  amenityText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+  }
 });
 
 export default styles;

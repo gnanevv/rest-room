@@ -140,7 +140,7 @@ const StepBasicInfo: React.FC<Props> = ({ formik, getCurrentLocation }) => {
                 colors={
                   formik.values.businessType === type.key
                     ? type.gradient
-                    : ['transparent', 'transparent']
+                    : (['transparent', 'transparent'] as const)
                 }
                 style={styles.businessTypeGradient}
               >
