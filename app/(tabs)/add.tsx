@@ -14,7 +14,43 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { MapPin, Camera, Star, Euro, Accessibility, Clock, Building, Phone, Globe, Plus, X, Locate, CircleCheck as CheckCircle, ArrowRight, ArrowLeft, Sparkles, Zap, Award, Target, Coffee, Utensils, ShoppingBag, Fuel, Users, Wifi, Car, Baby, Droplets, Wind, Music, Shield, Upload, Image as ImageIcon, Eye, Send } from 'lucide-react-native';
+import {
+  MapPin,
+  Camera,
+  Star,
+  Euro,
+  Accessibility,
+  Clock,
+  Building,
+  Phone,
+  Globe,
+  Plus,
+  X,
+  Locate,
+  CircleCheck as CheckCircle,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Zap,
+  Award,
+  Target,
+  Coffee,
+  Utensils,
+  ShoppingBag,
+  Fuel,
+  Users,
+  Wifi,
+  Car,
+  Baby,
+  Droplets,
+  Wind,
+  Music,
+  Shield,
+  Upload,
+  Image as ImageIcon,
+  Eye,
+  Send,
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
@@ -40,12 +76,37 @@ interface FormData {
 }
 
 const businessTypes = [
-  { key: 'public', label: 'Обществено', icon: Building, gradient: ['#10B981', '#34D399'] },
-  { key: 'restaurant', label: 'Ресторант', icon: Utensils, gradient: ['#F59E0B', '#FBBF24'] },
-  { key: 'cafe', label: 'Кафе', icon: Coffee, gradient: ['#8B5CF6', '#A78BFA'] },
+  {
+    key: 'public',
+    label: 'Обществено',
+    icon: Building,
+    gradient: ['#10B981', '#34D399'],
+  },
+  {
+    key: 'restaurant',
+    label: 'Ресторант',
+    icon: Utensils,
+    gradient: ['#F59E0B', '#FBBF24'],
+  },
+  {
+    key: 'cafe',
+    label: 'Кафе',
+    icon: Coffee,
+    gradient: ['#8B5CF6', '#A78BFA'],
+  },
   { key: 'bar', label: 'Бар', icon: Users, gradient: ['#EF4444', '#F87171'] },
-  { key: 'gas_station', label: 'Бензиностанция', icon: Fuel, gradient: ['#06B6D4', '#22D3EE'] },
-  { key: 'mall', label: 'Мол', icon: ShoppingBag, gradient: ['#EC4899', '#F472B6'] },
+  {
+    key: 'gas_station',
+    label: 'Бензиностанция',
+    icon: Fuel,
+    gradient: ['#06B6D4', '#22D3EE'],
+  },
+  {
+    key: 'mall',
+    label: 'Мол',
+    icon: ShoppingBag,
+    gradient: ['#EC4899', '#F472B6'],
+  },
 ];
 
 const availableAmenities = [
@@ -86,13 +147,16 @@ export default function AddRestroomScreen() {
   const totalSteps = 4;
 
   const updateFormData = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const toggleAmenity = (amenity: string) => {
     const currentAmenities = formData.amenities;
     if (currentAmenities.includes(amenity)) {
-      updateFormData('amenities', currentAmenities.filter(a => a !== amenity));
+      updateFormData(
+        'amenities',
+        currentAmenities.filter((a) => a !== amenity)
+      );
     } else {
       updateFormData('amenities', [...currentAmenities, amenity]);
     }
@@ -112,7 +176,10 @@ export default function AddRestroomScreen() {
   };
 
   const removePhoto = (index: number) => {
-    updateFormData('photos', formData.photos.filter((_, i) => i !== index));
+    updateFormData(
+      'photos',
+      formData.photos.filter((_, i) => i !== index)
+    );
   };
 
   const getCurrentLocation = () => {
@@ -138,32 +205,34 @@ export default function AddRestroomScreen() {
     try {
       setIsSubmitting(true);
 
-    // 1. Upload photos to Supabase Storage and collect public URLs
-    let photoUrls: string[] = [];
-    if (formData.photos.length) {
-      const bucket = supabase.storage.from('restroom-photos');
+      // 1. Upload photos to Supabase Storage and collect public URLs
+      let photoUrls: string[] = [];
+      if (formData.photos.length) {
+        const bucket = supabase.storage.from('restroom-photos');
 
-      for (const uri of formData.photos) {
-        try {
-          // Generate unique filename
-          const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-          // Fetch file data as blob
-          const response = await fetch(uri);
-          const blob = await response.blob();
+        for (const uri of formData.photos) {
+          try {
+            // Generate unique filename
+            const filename = `${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2)}.jpg`;
+            // Fetch file data as blob
+            const response = await fetch(uri);
+            const blob = await response.blob();
 
-          const { error: uploadError } = await bucket.upload(filename, blob, {
-            contentType: blob.type || 'image/jpeg',
-            upsert: false,
-          });
-          if (uploadError) throw uploadError;
+            const { error: uploadError } = await bucket.upload(filename, blob, {
+              contentType: blob.type || 'image/jpeg',
+              upsert: false,
+            });
+            if (uploadError) throw uploadError;
 
-          const { data } = bucket.getPublicUrl(filename);
-          photoUrls.push(data.publicUrl);
-        } catch (e) {
-          console.error('Photo upload error', e);
+            const { data } = bucket.getPublicUrl(filename);
+            photoUrls.push(data.publicUrl);
+          } catch (e) {
+            console.error('Photo upload error', e);
+          }
         }
       }
-    }
 
       const restroomData = {
         name: formData.name,
@@ -190,13 +259,14 @@ export default function AddRestroomScreen() {
       };
 
       // 2. Insert into the restrooms table
-    const { error: insertError } = await supabase.from('restrooms').insert(restroomData);
+      const { error: insertError } = await supabase
+        .from('restrooms')
+        .insert(restroomData);
 
-    if (insertError) throw insertError;
+      if (insertError) throw insertError;
 
-    Alert.alert('Успех!', 'Тоалетната беше добавена успешно!');
-    resetForm();
-
+      Alert.alert('Успех!', 'Тоалетната беше добавена успешно!');
+      resetForm();
     } catch (error: any) {
       console.error('Submit error:', error.message || error);
       Alert.alert('Успех!', 'Тоалетната беше добавена успешно! (Demo режим)');
@@ -231,17 +301,23 @@ export default function AddRestroomScreen() {
     <View style={styles.stepIndicator}>
       {Array.from({ length: totalSteps }, (_, i) => (
         <View key={i} style={styles.stepContainer}>
-          <View style={[
-            styles.stepCircle,
-            {
-              backgroundColor: i + 1 <= currentStep ? colors.primary : colors.surface,
-              borderColor: i + 1 <= currentStep ? colors.primary : colors.border,
-            }
-          ]}>
+          <View
+            style={[
+              styles.stepCircle,
+              {
+                backgroundColor:
+                  i + 1 <= currentStep ? colors.primary : colors.surface,
+                borderColor:
+                  i + 1 <= currentStep ? colors.primary : colors.border,
+              },
+            ]}
+          >
             {i + 1 <= currentStep ? (
               <CheckCircle size={16} color="#FFFFFF" strokeWidth={2.5} />
             ) : (
-              <Text style={[styles.stepNumber, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.stepNumber, { color: colors.textSecondary }]}
+              >
                 {i + 1}
               </Text>
             )}
@@ -251,7 +327,8 @@ export default function AddRestroomScreen() {
               style={[
                 styles.stepLine,
                 {
-                  backgroundColor: i + 1 < currentStep ? colors.primary : colors.border,
+                  backgroundColor:
+                    i + 1 < currentStep ? colors.primary : colors.border,
                 },
               ]}
             />
@@ -279,9 +356,16 @@ export default function AddRestroomScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Име на заведението *</Text>
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.inputBlur}>
-          <View style={[styles.inputContainer, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.text }]}>
+          Име на заведението *
+        </Text>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.inputBlur}
+        >
+          <View
+            style={[styles.inputContainer, { backgroundColor: colors.surface }]}
+          >
             <Building size={20} color={colors.primary} strokeWidth={2} />
             <TextInput
               style={[styles.input, { color: colors.text }]}
@@ -296,8 +380,13 @@ export default function AddRestroomScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Адрес *</Text>
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.inputBlur}>
-          <View style={[styles.inputContainer, { backgroundColor: colors.surface }]}>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.inputBlur}
+        >
+          <View
+            style={[styles.inputContainer, { backgroundColor: colors.surface }]}
+          >
             <MapPin size={20} color={colors.primary} strokeWidth={2} />
             <TextInput
               style={[styles.input, { color: colors.text }]}
@@ -306,8 +395,14 @@ export default function AddRestroomScreen() {
               value={formData.address}
               onChangeText={(text) => updateFormData('address', text)}
             />
-            <TouchableOpacity onPress={getCurrentLocation} style={styles.locationButton}>
-              <LinearGradient colors={[colors.primary, colors.primaryDark]} style={styles.locationGradient}>
+            <TouchableOpacity
+              onPress={getCurrentLocation}
+              style={styles.locationButton}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.locationGradient}
+              >
                 <Locate size={16} color="#FFFFFF" strokeWidth={2} />
               </LinearGradient>
             </TouchableOpacity>
@@ -316,7 +411,9 @@ export default function AddRestroomScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: colors.text }]}>Тип заведение *</Text>
+        <Text style={[styles.label, { color: colors.text }]}>
+          Тип заведение *
+        </Text>
         <View style={styles.businessTypeGrid}>
           {businessTypes.map((type) => (
             <TouchableOpacity
@@ -324,23 +421,41 @@ export default function AddRestroomScreen() {
               style={[
                 styles.businessTypeCard,
                 {
-                  borderColor: formData.businessType === type.key ? colors.primary : colors.border,
+                  borderColor:
+                    formData.businessType === type.key
+                      ? colors.primary
+                      : colors.border,
                   backgroundColor: colors.surface,
                 },
               ]}
               onPress={() => updateFormData('businessType', type.key)}
             >
               <LinearGradient
-                colors={formData.businessType === type.key ? type.gradient : ['transparent', 'transparent']}
+                colors={
+                  formData.businessType === type.key
+                    ? (type.gradient as [string, string])
+                    : (['transparent', 'transparent'] as [string, string])
+                }
                 style={styles.businessTypeGradient}
               >
-                <View style={[
-                  styles.businessTypeIcon,
-                  { backgroundColor: formData.businessType === type.key ? 'rgba(255,255,255,0.2)' : colors.background }
-                ]}>
+                <View
+                  style={[
+                    styles.businessTypeIcon,
+                    {
+                      backgroundColor:
+                        formData.businessType === type.key
+                          ? 'rgba(255,255,255,0.2)'
+                          : colors.background,
+                    },
+                  ]}
+                >
                   <type.icon
                     size={20}
-                    color={formData.businessType === type.key ? '#FFFFFF' : type.gradient[0]}
+                    color={
+                      formData.businessType === type.key
+                        ? '#FFFFFF'
+                        : type.gradient[0]
+                    }
                     strokeWidth={2}
                   />
                 </View>
@@ -348,7 +463,10 @@ export default function AddRestroomScreen() {
                   style={[
                     styles.businessTypeText,
                     {
-                      color: formData.businessType === type.key ? '#FFFFFF' : colors.text,
+                      color:
+                        formData.businessType === type.key
+                          ? '#FFFFFF'
+                          : colors.text,
                     },
                   ]}
                 >
@@ -380,17 +498,28 @@ export default function AddRestroomScreen() {
       </View>
 
       <View style={[styles.switchCard, { backgroundColor: colors.surface }]}>
-        <BlurView intensity={theme === 'light' ? 10 : 30} style={styles.switchBlur}>
+        <BlurView
+          intensity={theme === 'light' ? 10 : 30}
+          style={styles.switchBlur}
+        >
           <View style={styles.switchContainer}>
             <View style={styles.switchInfo}>
-              <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.switchIcon}>
+              <LinearGradient
+                colors={['#F59E0B', '#FBBF24']}
+                style={styles.switchIcon}
+              >
                 <Euro size={20} color="#FFFFFF" strokeWidth={2} />
               </LinearGradient>
               <View style={styles.switchText}>
                 <Text style={[styles.switchLabel, { color: colors.text }]}>
                   Платена тоалетна
                 </Text>
-                <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.switchDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Има ли такса за ползване?
                 </Text>
               </View>
@@ -404,8 +533,16 @@ export default function AddRestroomScreen() {
           </View>
 
           {formData.isPaid && (
-            <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.priceInputBlur}>
-              <View style={[styles.priceInputContainer, { backgroundColor: colors.background }]}>
+            <BlurView
+              intensity={theme === 'light' ? 20 : 40}
+              style={styles.priceInputBlur}
+            >
+              <View
+                style={[
+                  styles.priceInputContainer,
+                  { backgroundColor: colors.background },
+                ]}
+              >
                 <Euro size={18} color={colors.warning} strokeWidth={2} />
                 <TextInput
                   style={[styles.priceInput, { color: colors.text }]}
@@ -415,7 +552,11 @@ export default function AddRestroomScreen() {
                   onChangeText={(text) => updateFormData('price', text)}
                   keyboardType="decimal-pad"
                 />
-                <Text style={[styles.currency, { color: colors.textSecondary }]}>лв</Text>
+                <Text
+                  style={[styles.currency, { color: colors.textSecondary }]}
+                >
+                  лв
+                </Text>
               </View>
             </BlurView>
           )}
@@ -423,17 +564,28 @@ export default function AddRestroomScreen() {
       </View>
 
       <View style={[styles.switchCard, { backgroundColor: colors.surface }]}>
-        <BlurView intensity={theme === 'light' ? 10 : 30} style={styles.switchBlur}>
+        <BlurView
+          intensity={theme === 'light' ? 10 : 30}
+          style={styles.switchBlur}
+        >
           <View style={styles.switchContainer}>
             <View style={styles.switchInfo}>
-              <LinearGradient colors={['#10B981', '#34D399']} style={styles.switchIcon}>
+              <LinearGradient
+                colors={['#10B981', '#34D399']}
+                style={styles.switchIcon}
+              >
                 <Accessibility size={20} color="#FFFFFF" strokeWidth={2} />
               </LinearGradient>
               <View style={styles.switchText}>
                 <Text style={[styles.switchLabel, { color: colors.text }]}>
                   Достъпна за хора с увреждания
                 </Text>
-                <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.switchDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Има ли достъп за инвалидни колички?
                 </Text>
               </View>
@@ -476,23 +628,36 @@ export default function AddRestroomScreen() {
               style={[
                 styles.amenityChip,
                 {
-                  backgroundColor: formData.amenities.includes(amenity.name) ? amenity.color : colors.surface,
-                  borderColor: formData.amenities.includes(amenity.name) ? amenity.color : colors.border,
-                }
+                  backgroundColor: formData.amenities.includes(amenity.name)
+                    ? amenity.color
+                    : colors.surface,
+                  borderColor: formData.amenities.includes(amenity.name)
+                    ? amenity.color
+                    : colors.border,
+                },
               ]}
               onPress={() => toggleAmenity(amenity.name)}
             >
-              <BlurView intensity={formData.amenities.includes(amenity.name) ? 30 : 10} style={styles.amenityBlur}>
+              <BlurView
+                intensity={formData.amenities.includes(amenity.name) ? 30 : 10}
+                style={styles.amenityBlur}
+              >
                 <amenity.icon
                   size={16}
-                  color={formData.amenities.includes(amenity.name) ? '#FFFFFF' : amenity.color}
+                  color={
+                    formData.amenities.includes(amenity.name)
+                      ? '#FFFFFF'
+                      : amenity.color
+                  }
                   strokeWidth={2}
                 />
                 <Text
                   style={[
                     styles.amenityText,
                     {
-                      color: formData.amenities.includes(amenity.name) ? '#FFFFFF' : colors.text,
+                      color: formData.amenities.includes(amenity.name)
+                        ? '#FFFFFF'
+                        : colors.text,
                     },
                   ]}
                 >
@@ -506,8 +671,16 @@ export default function AddRestroomScreen() {
 
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Описание</Text>
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.textAreaBlur}>
-          <View style={[styles.textAreaContainer, { backgroundColor: colors.surface }]}>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.textAreaBlur}
+        >
+          <View
+            style={[
+              styles.textAreaContainer,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <TextInput
               style={[styles.textArea, { color: colors.text }]}
               placeholder="Опишете тоалетната - състояние, чистота, особености..."
@@ -545,14 +718,19 @@ export default function AddRestroomScreen() {
         style={[styles.uploadButton, { backgroundColor: colors.surface }]}
         onPress={pickImage}
       >
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.uploadBlur}>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.uploadBlur}
+        >
           <LinearGradient
             colors={['#3B82F6', '#1E40AF']}
             style={styles.uploadGradient}
           >
             <Upload size={28} color="#FFFFFF" strokeWidth={2} />
             <Text style={styles.uploadText}>Добави снимка</Text>
-            <Text style={styles.uploadSubtext}>Натиснете за избор от галерията</Text>
+            <Text style={styles.uploadSubtext}>
+              Натиснете за избор от галерията
+            </Text>
           </LinearGradient>
         </BlurView>
       </TouchableOpacity>
@@ -563,7 +741,10 @@ export default function AddRestroomScreen() {
             <View key={index} style={styles.photoContainer}>
               <Image source={{ uri: photo }} style={styles.photo} />
               <TouchableOpacity
-                style={[styles.removePhotoButton, { backgroundColor: colors.error }]}
+                style={[
+                  styles.removePhotoButton,
+                  { backgroundColor: colors.error },
+                ]}
                 onPress={() => removePhoto(index)}
               >
                 <X size={14} color="#FFFFFF" strokeWidth={2} />
@@ -574,43 +755,72 @@ export default function AddRestroomScreen() {
       )}
 
       <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.summaryBlur}>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.summaryBlur}
+        >
           <View style={styles.summaryHeader}>
-            <LinearGradient colors={['#10B981', '#34D399']} style={styles.summaryIcon}>
+            <LinearGradient
+              colors={['#10B981', '#34D399']}
+              style={styles.summaryIcon}
+            >
               <Eye size={20} color="#FFFFFF" strokeWidth={2} />
             </LinearGradient>
             <Text style={[styles.summaryTitle, { color: colors.text }]}>
               Преглед на информацията
             </Text>
           </View>
-          
+
           <View style={styles.summaryContent}>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Име:</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Име:
+              </Text>
               <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {formData.name || 'Не е въведено'}
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Адрес:</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Адрес:
+              </Text>
               <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {formData.address || 'Не е въведен'}
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Тип:</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Тип:
+              </Text>
               <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {businessTypes.find(t => t.key === formData.businessType)?.label}
+                {
+                  businessTypes.find((t) => t.key === formData.businessType)
+                    ?.label
+                }
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Цена:</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Цена:
+              </Text>
               <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {formData.isPaid ? `${formData.price || '0'} лв` : 'Безплатно'}
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Удобства:</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Удобства:
+              </Text>
               <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {formData.amenities.length} избрани
               </Text>
@@ -623,11 +833,16 @@ export default function AddRestroomScreen() {
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
-      default: return renderStep1();
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      case 4:
+        return renderStep4();
+      default:
+        return renderStep1();
     }
   };
 
@@ -649,12 +864,22 @@ export default function AddRestroomScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={theme === 'light' ? ['#10B981', '#34D399', '#6EE7B7'] : ['#059669', '#10B981', '#34D399']}
+        colors={
+          theme === 'light'
+            ? ['#10B981', '#34D399', '#6EE7B7']
+            : ['#059669', '#10B981', '#34D399']
+        }
         style={styles.header}
       >
-        <BlurView intensity={theme === 'light' ? 20 : 40} style={styles.headerBlur}>
+        <BlurView
+          intensity={theme === 'light' ? 20 : 40}
+          style={styles.headerBlur}
+        >
           <View style={styles.headerContent}>
-            <LinearGradient colors={['#FFFFFF', '#F3F4F6']} style={styles.headerIcon}>
+            <LinearGradient
+              colors={['#FFFFFF', '#F3F4F6']}
+              style={styles.headerIcon}
+            >
               <Plus size={28} color="#10B981" strokeWidth={2.5} />
             </LinearGradient>
             <View style={styles.headerText}>
@@ -674,24 +899,34 @@ export default function AddRestroomScreen() {
         intensity={theme === 'light' ? 95 : 85}
         style={styles.bottomBar}
       >
-        <View style={[styles.bottomBarContent, { backgroundColor: colors.surface }]}>
+        <View
+          style={[styles.bottomBarContent, { backgroundColor: colors.surface }]}
+        >
           {currentStep > 1 && (
             <TouchableOpacity
-              style={[styles.secondaryButton, { backgroundColor: colors.background, borderColor: colors.border }]}
+              style={[
+                styles.secondaryButton,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
               onPress={prevStep}
             >
               <ArrowLeft size={18} color={colors.text} strokeWidth={2} />
-              <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
+              <Text
+                style={[styles.secondaryButtonText, { color: colors.text }]}
+              >
                 Назад
               </Text>
             </TouchableOpacity>
           )}
-          
+
           <TouchableOpacity
             style={[
               styles.primaryButton,
               {
-                opacity: (isStepValid() && !isSubmitting) ? 1 : 0.5,
+                opacity: isStepValid() && !isSubmitting ? 1 : 0.5,
               },
               currentStep === 1 && { flex: 1 },
             ]}
@@ -703,7 +938,11 @@ export default function AddRestroomScreen() {
               style={styles.primaryButtonGradient}
             >
               <Text style={styles.primaryButtonText}>
-                {isSubmitting ? 'Запазване...' : currentStep === totalSteps ? 'Добави тоалетна' : 'Напред'}
+                {isSubmitting
+                  ? 'Запазване...'
+                  : currentStep === totalSteps
+                  ? 'Добави тоалетна'
+                  : 'Напред'}
               </Text>
               {currentStep === totalSteps && !isSubmitting ? (
                 <Send size={18} color="#FFFFFF" strokeWidth={2} />
