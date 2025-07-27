@@ -207,7 +207,7 @@ export default function AddRestroomScreen() {
 
       // 1. Upload photos to Supabase Storage and collect public URLs
       let photoUrls: string[] = [];
-      if (formData.photos.length) {
+      if (formData.photos && formData.photos.length > 0) {
         const bucket = supabase.storage.from('restroom-photos');
 
         for (const uri of formData.photos) {
@@ -216,20 +216,41 @@ export default function AddRestroomScreen() {
             const filename = `${Date.now()}-${Math.random()
               .toString(36)
               .slice(2)}.jpg`;
-            // Fetch file data as blob
-            const response = await fetch(uri);
-            const blob = await response.blob();
+            
+            // Check if the URI is a local file or base64 data
+            let blob;
+            if (uri.startsWith('data:')) {
+              // Handle base64 data
+              const response = await fetch(uri);
+              blob = await response.blob();
+            } else if (uri.startsWith('file:')) {
+              // Handle local file URI
+              const response = await fetch(uri);
+              blob = await response.blob();
+            } else {
+              // Handle remote URL (shouldn't normally happen)
+              console.warn('Unexpected URI format:', uri);
+              continue;
+            }
 
             const { error: uploadError } = await bucket.upload(filename, blob, {
               contentType: blob.type || 'image/jpeg',
               upsert: false,
+              cacheControl: '3600',
             });
-            if (uploadError) throw uploadError;
+
+            if (uploadError) {
+              console.error('Upload error:', uploadError);
+              continue;
+            }
 
             const { data } = bucket.getPublicUrl(filename);
-            photoUrls.push(data.publicUrl);
+            if (data?.publicUrl) {
+              photoUrls.push(data.publicUrl);
+            }
           } catch (e) {
-            console.error('Photo upload error', e);
+            console.error('Error processing photo:', e);
+            // Continue with next photo instead of failing the whole submission
           }
         }
       }
@@ -269,8 +290,7 @@ export default function AddRestroomScreen() {
       resetForm();
     } catch (error: any) {
       console.error('Submit error:', error.message || error);
-      Alert.alert('Успех!', 'Тоалетната беше добавена успешно! (Demo режим)');
-      resetForm();
+      Alert.alert('Грешка', 'Възникна грешка при изпращането на данните. Моля, опитайте отново.');
     } finally {
       setIsSubmitting(false);
     }
@@ -339,10 +359,13 @@ export default function AddRestroomScreen() {
   );
 
   const renderStep1 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={[styles.stepContent, { backgroundColor: colors.background }]} 
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.stepHeader}>
         <LinearGradient
-          colors={['#10B981', '#34D399']}
+          colors={theme === 'light' ? ['#10B981', '#34D399'] : ['#0D9488', '#14B8A6']}
           style={styles.stepIconContainer}
         >
           <Building size={24} color="#FFFFFF" strokeWidth={2} />
@@ -481,10 +504,13 @@ export default function AddRestroomScreen() {
   );
 
   const renderStep2 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={[styles.stepContent, { backgroundColor: colors.background }]} 
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.stepHeader}>
         <LinearGradient
-          colors={['#F59E0B', '#FBBF24']}
+          colors={theme === 'light' ? ['#F59E0B', '#FBBF24'] : ['#D97706', '#F59E0B']}
           style={styles.stepIconContainer}
         >
           <Euro size={24} color="#FFFFFF" strokeWidth={2} />
@@ -603,10 +629,13 @@ export default function AddRestroomScreen() {
   );
 
   const renderStep3 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={[styles.stepContent, { backgroundColor: colors.background }]} 
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.stepHeader}>
         <LinearGradient
-          colors={['#8B5CF6', '#A78BFA']}
+          colors={theme === 'light' ? ['#8B5CF6', '#A78BFA'] : ['#7C3AED', '#8B5CF6']}
           style={styles.stepIconContainer}
         >
           <Award size={24} color="#FFFFFF" strokeWidth={2} />
@@ -698,10 +727,13 @@ export default function AddRestroomScreen() {
   );
 
   const renderStep4 = () => (
-    <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={[styles.stepContent, { backgroundColor: colors.background }]} 
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.stepHeader}>
         <LinearGradient
-          colors={['#EC4899', '#F472B6']}
+          colors={theme === 'light' ? ['#EC4899', '#F472B6'] : ['#DB2777', '#EC4899']}
           style={styles.stepIconContainer}
         >
           <Camera size={24} color="#FFFFFF" strokeWidth={2} />
