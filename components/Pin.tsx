@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Restroom } from '@/types/restroom';
-import { MapPin, Star, AlertTriangle, XCircle } from 'lucide-react-native';
+import { MapPin, Star, TriangleAlert as AlertTriangle, Circle as XCircle } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 
 interface PinProps {

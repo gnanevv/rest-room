@@ -10,22 +10,7 @@ import BottomSheet, {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  MapPin,
-  Star,
-  Euro,
-  Accessibility,
-  Navigation2,
-  X,
-  CircleCheck as CheckCircle,
-  TriangleAlert as AlertTriangle,
-  XCircle,
-  Building,
-  Coffee,
-  Utensils,
-  ShoppingBag,
-  Fuel,
-} from 'lucide-react-native';
+import { MapPin, Star, Euro, Accessibility, Navigation2, X, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Circle as XCircle, Building, Coffee, Utensils, ShoppingBag, Fuel } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Restroom } from '@/types/restroom';
 
