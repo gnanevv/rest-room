@@ -31,7 +31,6 @@ export function AnimatedSearchBar({
 }: AnimatedSearchBarProps) {
   const { colors, theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const animatedWidth = useRef(new Animated.Value(52)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
 
@@ -46,7 +45,6 @@ export function AnimatedSearchBar({
 
   const expandSearch = () => {
     setIsExpanded(true);
-    setShowSuggestions(true);
     
     Animated.parallel([
       Animated.spring(animatedWidth, {
@@ -65,7 +63,6 @@ export function AnimatedSearchBar({
 
   const collapseSearch = () => {
     setIsExpanded(false);
-    setShowSuggestions(false);
     onSearchChange('');
     
     Animated.parallel([
@@ -86,6 +83,12 @@ export function AnimatedSearchBar({
   const handleSuggestionPress = (restroom: Restroom) => {
     onSuggestionPress(restroom);
     collapseSearch();
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      collapseSearch();
+    }
   };
 
   return (
@@ -130,6 +133,8 @@ export function AnimatedSearchBar({
                     placeholderTextColor={colors.textTertiary}
                     value={searchQuery}
                     onChangeText={onSearchChange}
+                    onSubmitEditing={handleSearchSubmit}
+                    onBlur={collapseSearch}
                     autoFocus
                   />
                 </Animated.View>
@@ -145,7 +150,7 @@ export function AnimatedSearchBar({
         </BlurView>
       </Animated.View>
 
-      {showSuggestions && filteredSuggestions.length > 0 && (
+      {isExpanded && filteredSuggestions.length > 0 && (
         <Animated.View
           style={[
             styles.suggestionsContainer,

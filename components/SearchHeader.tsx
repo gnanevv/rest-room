@@ -21,7 +21,7 @@ export function SearchHeader({
 
   return (
     <LinearGradient
-      colors={theme === 'light' ? ['#1E40AF', '#3B82F6'] : ['#0F172A', '#1E293B']}
+      colors={theme === 'light' ? ['#4F46E5', '#6366F1', '#8B5CF6'] : ['#0F172A', '#1E293B']}
       style={styles.container}
     >
       <View style={styles.header}>
