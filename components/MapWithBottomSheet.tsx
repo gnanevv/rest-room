@@ -190,9 +190,11 @@ export function MapWithBottomSheet({
       />
 
       <ClusteredMapView
-        mapRef={(ref) => {
-          // @ts-ignore
-          mapRef.current = ref;
+        ref={(ref) => {
+          if (ref) {
+            // @ts-ignore - ClusteredMapView extends MapView
+            mapRef.current = ref.getMapRef();
+          }
         }}
         style={{ flex: 1 }}
         provider={PROVIDER_GOOGLE}
@@ -204,36 +206,45 @@ export function MapWithBottomSheet({
         clusterColor={colors.primary}
         clusterTextColor="#FFFFFF"
         clusterFontFamily="Inter-Bold"
-        radius={60}
-        maxZoom={16}
-        minZoom={1}
+        radius={50}
+        maxZoom={15}
+        minZoom={3}
         extent={512}
         nodeSize={64}
+        animationEnabled={true}
+        layoutAnimationConf={{
+          duration: 300,
+          type: 'easeInEaseOut',
+        }}
         onClusterPress={(cluster, markers) => {
           console.log('🎯 Cluster pressed with', markers?.length, 'markers');
           if (markers?.length === 1) {
             // Single marker - show bottom sheet
-            const restroom = markers[0].properties.restroom;
+            const restroom = markers[0]?.properties?.restroom;
             if (restroom) {
               handleMarkerPress(restroom);
             }
           } else {
             // Multiple markers - zoom in
-            const coordinates = markers?.map((marker) => ({
-              latitude: marker.geometry.coordinates[1],
-              longitude: marker.geometry.coordinates[0],
-            }));
+            if (markers && markers.length > 0) {
+              const coordinates = markers.map((marker) => ({
+                latitude: marker.geometry.coordinates[1],
+                longitude: marker.geometry.coordinates[0],
+              }));
 
-            if (mapRef.current) {
-              mapRef.current.fitToCoordinates(coordinates, {
-                edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-                animated: true,
-              });
+              if (mapRef.current && coordinates.length > 0) {
+                mapRef.current.fitToCoordinates(coordinates, {
+                  edgePadding: { top: 100, right: 100, bottom: 200, left: 100 },
+                  animated: true,
+                });
+              }
             }
           }
         }}
         renderMarker={(marker) => {
-          const restroom = marker.properties.restroom;
+          const restroom = marker?.properties?.restroom;
+          if (!restroom) return null;
+          
           return (
             <Marker
               key={restroom.id}
@@ -246,28 +257,32 @@ export function MapWithBottomSheet({
                 handleMarkerPress(restroom);
               }}
               tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 1 }}
             >
               <Pin restroom={restroom} />
             </Marker>
           );
         }}
+        renderCluster={(cluster, onPress) => {
+          const pointCount = cluster.pointCount;
+          const coordinate = {
+            latitude: cluster.coordinate.latitude,
+            longitude: cluster.coordinate.longitude,
+          };
+          
+          return (
+            <Marker
+              coordinate={coordinate}
+              onPress={onPress}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <Pin count={pointCount} />
+            </Marker>
+          );
+        }}
       >
-        {filteredRestrooms.map((restroom) => (
-          <Marker
-            key={restroom.id}
-            coordinate={{
-              latitude: restroom.coordinates.latitude,
-              longitude: restroom.coordinates.longitude,
-            }}
-            onPress={() => {
-              console.log('🎯 Filtered marker press:', restroom.name);
-              handleMarkerPress(restroom);
-            }}
-            tracksViewChanges={false}
-          >
-            <Pin restroom={restroom} />
-          </Marker>
-        ))}
+        {/* Individual markers are now handled by ClusteredMapView */}
       </ClusteredMapView>
 
       <AnimatedSearchBar

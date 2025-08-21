@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Restroom } from '@/types/restroom';
-import { MapPin, Star, TriangleAlert as AlertTriangle, Circle as XCircle } from 'lucide-react-native';
+import { MapPin, Star, TriangleAlert as AlertTriangle, XCircle, Clock } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 
 interface PinProps {
@@ -13,17 +13,25 @@ interface PinProps {
 export default function Pin({ restroom, count }: PinProps) {
   const { theme } = useTheme();
 
-  // Enhanced color system with better contrast
+  // Enhanced color system with better contrast and clustering support
   const getMarkerStyle = () => {
     if (count) {
+      // Cluster styling based on count
+      const size = count > 100 ? 56 : count > 50 ? 48 : count > 10 ? 44 : 40;
+      const colors = count > 100 
+        ? ['#7C3AED', '#8B5CF6'] as const
+        : count > 50 
+        ? ['#DC2626', '#EF4444'] as const
+        : count > 10 
+        ? ['#D97706', '#F59E0B'] as const
+        : ['#4F46E5', '#6366F1'] as const;
+        
       return {
-        gradient: theme === 'light' 
-          ? ['#4F46E5', '#6366F1'] as const
-          : ['#8B5CF6', '#A78BFA'] as const,
+        gradient: colors,
         icon: null,
-        size: 44,
+        size,
         borderColor: '#FFFFFF',
-        shadowColor: '#4F46E5',
+        shadowColor: colors[0],
       };
     }
 
@@ -51,7 +59,7 @@ export default function Pin({ restroom, count }: PinProps) {
     if (restroom.availability === 'occupied') {
       return {
         gradient: ['#D97706', '#F59E0B'] as const,
-        icon: AlertTriangle,
+        icon: Clock,
         size: 36,
         borderColor: '#FFFFFF',
         shadowColor: '#D97706',
@@ -112,8 +120,10 @@ export default function Pin({ restroom, count }: PinProps) {
         ]}
       >
         {count ? (
-          <Text style={[styles.count, { fontSize: count > 99 ? 12 : 14 }]}>
-            {count > 99 ? '99+' : count}
+          <Text style={[styles.count, { 
+            fontSize: count > 999 ? 10 : count > 99 ? 12 : count > 9 ? 14 : 16 
+          }]}>
+            {count > 999 ? '999+' : count}
           </Text>
         ) : IconComponent ? (
           <IconComponent 
@@ -128,13 +138,14 @@ export default function Pin({ restroom, count }: PinProps) {
       </LinearGradient>
       
       {/* Enhanced status indicator for high-rated places */}
-      {restroom && restroom.rating >= 4.5 && (
+      {restroom && restroom.rating >= 4.5 && !count && (
         <View style={[styles.statusBadge, { backgroundColor: '#059669' }]}>
           <Star size={8} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
         </View>
       )}
       
-      {/* Pointer */}
+      {/* Pointer - only for individual markers, not clusters */}
+      {!count && (
       <View 
         style={[
           styles.arrow, 
@@ -144,6 +155,7 @@ export default function Pin({ restroom, count }: PinProps) {
           }
         ]} 
       />
+      )}
     </View>
   );
 }
