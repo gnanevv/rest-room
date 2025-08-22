@@ -2,58 +2,24 @@ import React from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Restroom } from '@/types/restroom';
-import { MapPin, Star, Circle as XCircle, Clock, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import {
+  MapPin,
+  Star,
+  Circle as XCircle,
+  Clock,
+  TriangleAlert as AlertTriangle,
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 
 interface PinProps {
   restroom?: Restroom;
-  count?: number; // when used as a cluster
 }
 
-export default function Pin({ restroom, count }: PinProps) {
+export default function Pin({ restroom }: PinProps) {
   const { theme } = useTheme();
 
-  // Enhanced color system with better contrast
+  // Color system for restroom markers
   const getMarkerStyle = () => {
-    if (count) {
-      // Cluster styling based on count
-      if (count >= 100) {
-        return {
-          gradient: ['#7C3AED', '#A855F7'] as const,
-          icon: null,
-          size: 56,
-          borderColor: '#FFFFFF',
-          shadowColor: '#7C3AED',
-        };
-      } else if (count >= 50) {
-        return {
-          gradient: ['#DC2626', '#EF4444'] as const,
-          icon: null,
-          size: 50,
-          borderColor: '#FFFFFF',
-          shadowColor: '#DC2626',
-        };
-      } else if (count >= 10) {
-        return {
-          gradient: ['#D97706', '#F59E0B'] as const,
-          icon: null,
-          size: 44,
-          borderColor: '#FFFFFF',
-          shadowColor: '#D97706',
-        };
-      } else {
-        return {
-          gradient: theme === 'light' 
-            ? ['#4F46E5', '#6366F1'] as const
-            : ['#8B5CF6', '#A78BFA'] as const,
-          icon: null,
-          size: 40,
-          borderColor: '#FFFFFF',
-          shadowColor: '#4F46E5',
-        };
-      }
-    }
-
     if (!restroom) {
       return {
         gradient: ['#6B7280', '#9CA3AF'] as const,
@@ -74,7 +40,7 @@ export default function Pin({ restroom, count }: PinProps) {
         shadowColor: '#DC2626',
       };
     }
-    
+
     if (restroom.availability === 'occupied') {
       return {
         gradient: ['#D97706', '#F59E0B'] as const,
@@ -84,7 +50,7 @@ export default function Pin({ restroom, count }: PinProps) {
         shadowColor: '#D97706',
       };
     }
-    
+
     // High-rated places get special treatment
     if (restroom.rating >= 4.5) {
       return {
@@ -95,12 +61,13 @@ export default function Pin({ restroom, count }: PinProps) {
         shadowColor: '#059669',
       };
     }
-    
+
     // Default available
     return {
-      gradient: theme === 'light' 
-        ? ['#4F46E5', '#6366F1'] as const
-        : ['#8B5CF6', '#A78BFA'] as const,
+      gradient:
+        theme === 'light'
+          ? (['#4F46E5', '#6366F1'] as const)
+          : (['#8B5CF6', '#A78BFA'] as const),
       icon: MapPin,
       size: 36,
       borderColor: '#FFFFFF',
@@ -125,8 +92,8 @@ export default function Pin({ restroom, count }: PinProps) {
           },
         ]}
       />
-      <LinearGradient 
-        colors={markerStyle.gradient} 
+      <LinearGradient
+        colors={markerStyle.gradient}
         style={[
           styles.gradient,
           {
@@ -138,14 +105,10 @@ export default function Pin({ restroom, count }: PinProps) {
           },
         ]}
       >
-        {count ? (
-          <Text style={[styles.count, { fontSize: count > 99 ? 12 : count > 9 ? 14 : 16 }]}>
-            {count > 99 ? '99+' : count}
-          </Text>
-        ) : IconComponent ? (
-          <IconComponent 
-            size={markerStyle.size === 38 ? 20 : 18} 
-            color="#FFFFFF" 
+        {IconComponent ? (
+          <IconComponent
+            size={markerStyle.size === 38 ? 20 : 18}
+            color="#FFFFFF"
             strokeWidth={2.5}
             {...(IconComponent === Star && { fill: '#FFFFFF' })}
           />
@@ -153,26 +116,24 @@ export default function Pin({ restroom, count }: PinProps) {
           <MapPin size={18} color="#FFFFFF" strokeWidth={2.5} />
         )}
       </LinearGradient>
-      
+
       {/* Enhanced status indicator for high-rated places */}
       {restroom && restroom.rating >= 4.5 && (
         <View style={[styles.statusBadge, { backgroundColor: '#059669' }]}>
           <Star size={8} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
         </View>
       )}
-      
-      {/* Pointer - only for individual pins, not clusters */}
-      {!count && (
-        <View 
-          style={[
-            styles.arrow, 
-            { 
-              borderTopColor: markerStyle.gradient[1],
-              shadowColor: markerStyle.shadowColor,
-            }
-          ]} 
-        />
-      )}
+
+      {/* Pointer */}
+      <View
+        style={[
+          styles.arrow,
+          {
+            borderTopColor: markerStyle.gradient[1],
+            shadowColor: markerStyle.shadowColor,
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -258,10 +219,5 @@ const styles = StyleSheet.create({
         filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
       },
     }),
-  },
-  count: {
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-    textAlign: 'center',
   },
 });

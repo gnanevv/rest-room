@@ -8,9 +8,10 @@ import {
   Platform,
   StatusBar,
   Alert,
+  Text,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import SuperCluster from 'react-native-maps-super-cluster';
+
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
@@ -35,227 +36,234 @@ export function MapWithBottomSheet({
   restrooms,
   userLocation,
 }: MapWithBottomSheetProps) {
-  const { colors, theme } = useTheme();
-  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(restrooms);
-  const [mapRegion, setMapRegion] = useState<Region>({
-    latitude: userLocation?.latitude || 42.6977,
-    longitude: userLocation?.longitude || 23.3219,
-    latitudeDelta: INITIAL_DELTA,
-    longitudeDelta: INITIAL_DELTA,
-  });
-
-  const mapRef = useRef<MapView | null>(null);
-
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredRestrooms(restrooms);
-    } else {
-      const filtered = restrooms.filter(
-        (restroom) =>
-          restroom.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          restroom.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          restroom.city.toLowerCase().includes(searchQuery.toLowerCase())
+  try {
+    // IMMEDIATE safety check - if restrooms is undefined/null, return early
+    if (!restrooms) {
+      console.warn(
+        'MapWithBottomSheet: restrooms prop is undefined/null, rendering fallback'
       );
-      setFilteredRestrooms(filtered);
+      return (
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text>Loading map...</Text>
+        </View>
+      );
     }
-  }, [searchQuery, restrooms]);
 
-  const handleMarkerPress = (restroom: Restroom) => {
-    console.log('🎯 Marker pressed:', restroom.name);
-    setSelectedRestroom(restroom);
-  };
-
-  const handleClusterPress = (cluster: any) => {
-    const { coordinate, pointCount, clusterId } = cluster;
-    
-    if (pointCount === 1) {
-      // Single marker in cluster - show details
-      const restroom = cluster.properties?.restroom;
-      if (restroom) {
-        handleMarkerPress(restroom);
+    // Additional safety check for the restrooms array structure
+    try {
+      if (!Array.isArray(restrooms)) {
+        console.warn(
+          'MapWithBottomSheet: restrooms prop is not an array:',
+          restrooms
+        );
+        return (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Text>Invalid data format</Text>
+          </View>
+        );
       }
-    } else {
-      // Multiple markers - zoom in
-      if (mapRef.current) {
-        const newDelta = mapRegion.latitudeDelta * 0.5;
-        mapRef.current.animateToRegion({
-          latitude: coordinate.latitude,
-          longitude: coordinate.longitude,
-          latitudeDelta: newDelta,
-          longitudeDelta: newDelta,
-        }, 500);
-      }
+    } catch (error) {
+      console.error(
+        'MapWithBottomSheet: Error checking restrooms prop:',
+        error
+      );
+      return (
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text>Error loading map</Text>
+        </View>
+      );
     }
-  };
 
-  const closeBottomSheet = () => {
-    console.log('🔽 Closing bottom sheet');
-    setSelectedRestroom(null);
-  };
-
-  const zoomIn = () => {
-    if (!mapRef.current) return;
-    mapRef.current.getCamera().then((cam) => {
-      const newZoom = Math.min((cam.zoom ?? 14) + 1, 20);
-      cam.zoom = newZoom;
-      mapRef.current?.animateCamera(cam, { duration: 300 });
+    const { colors, theme } = useTheme();
+    const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(
+      null
+    );
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredRestrooms, setFilteredRestrooms] =
+      useState<Restroom[]>(restrooms);
+    const [mapRegion, setMapRegion] = useState<Region>({
+      latitude:
+        userLocation && typeof userLocation.latitude === 'number'
+          ? userLocation.latitude
+          : 42.6977,
+      longitude:
+        userLocation && typeof userLocation.longitude === 'number'
+          ? userLocation.longitude
+          : 23.3219,
+      latitudeDelta: INITIAL_DELTA,
+      longitudeDelta: INITIAL_DELTA,
     });
-  };
 
-  const zoomOut = () => {
-    if (!mapRef.current) return;
-    mapRef.current.getCamera().then((cam) => {
-      const newZoom = Math.max((cam.zoom ?? 14) - 1, 3);
-      cam.zoom = newZoom;
-      mapRef.current?.animateCamera(cam, { duration: 300 });
-    });
-  };
+    const mapRef = useRef<MapView | null>(null);
 
-  const centerOnUser = () => {
-    if (userLocation && mapRef.current) {
-      mapRef.current.animateCamera(
-        {
-          center: {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-          },
-          zoom: 15,
-        },
-        { duration: 400 }
-      );
-    }
-  };
+    useEffect(() => {
+      try {
+        if (!Array.isArray(restrooms)) {
+          console.warn('Restrooms is not an array in useEffect:', restrooms);
+          setFilteredRestrooms([]);
+          return;
+        }
 
-  const openInMaps = (restroom: Restroom) => {
-    const { latitude, longitude } = restroom.coordinates;
-
-    if (Platform.OS === 'ios') {
-      Alert.alert(
-        'Навигация',
-        `Отваряне на Apple Maps към ${restroom.name}...`
-      );
-    } else if (Platform.OS === 'android') {
-      Alert.alert(
-        'Навигация',
-        `Отваряне на Google Maps към ${restroom.name}...`
-      );
-    } else {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      if (typeof window !== 'undefined') {
-        window.open(url, '_blank');
-      }
-    }
-  };
-
-  // Transform restrooms for SuperCluster
-  const clusterData = filteredRestrooms.map((restroom) => ({
-    geometry: {
-      type: 'Point' as const,
-      coordinates: [restroom.coordinates.longitude, restroom.coordinates.latitude],
-    },
-    properties: {
-      restroom,
-      point_count: 1,
-    },
-  }));
-
-  const FloatingMapControls = () => (
-    <View style={styles.mapControls}>
-      <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
-        <BlurView
-          intensity={theme === 'light' ? 80 : 60}
-          style={styles.controlBlur}
-        >
-          <View
-            style={[
-              styles.controlContent,
-              { backgroundColor: `${colors.surface}95` },
-            ]}
-          >
-            <ZoomIn size={18} color={colors.primary} strokeWidth={2} />
-          </View>
-        </BlurView>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
-        <BlurView
-          intensity={theme === 'light' ? 80 : 60}
-          style={styles.controlBlur}
-        >
-          <View
-            style={[
-              styles.controlContent,
-              { backgroundColor: `${colors.surface}95` },
-            ]}
-          >
-            <ZoomOut size={18} color={colors.primary} strokeWidth={2} />
-          </View>
-        </BlurView>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.controlButton} onPress={centerOnUser}>
-        <BlurView
-          intensity={theme === 'light' ? 80 : 60}
-          style={styles.controlBlur}
-        >
-          <View
-            style={[
-              styles.controlContent,
-              { backgroundColor: `${colors.surface}95` },
-            ]}
-          >
-            <Locate size={18} color={colors.primary} strokeWidth={2} />
-          </View>
-        </BlurView>
-      </TouchableOpacity>
-    </View>
-  );
-
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
-        barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
-        backgroundColor="transparent"
-        translucent
-      />
-
-      <SuperCluster
-        data={clusterData}
-        radius={60}
-        maxZoom={16}
-        minZoom={3}
-        extent={512}
-        nodeSize={64}
-        region={mapRegion}
-        onExplode={handleClusterPress}
-        onImplode={handleClusterPress}
-        onClusterPress={handleClusterPress}
-        preserveClusterPressBehavior={false}
-        edgePadding={{ top: 100, left: 50, bottom: 100, right: 50 }}
-        animationEnabled={true}
-        layoutAnimationConf={{
-          type: 'spring',
-          property: 'scaleXY',
-          springDamping: 0.7,
-          duration: 300,
-        }}
-        renderCluster={(cluster) => {
-          const { coordinate, pointCount } = cluster;
-          return (
-            <Marker
-              key={`cluster-${cluster.clusterId}`}
-              coordinate={coordinate}
-              onPress={() => handleClusterPress(cluster)}
-              tracksViewChanges={false}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
-              <Pin count={pointCount} />
-            </Marker>
+        if (searchQuery.trim() === '') {
+          setFilteredRestrooms(restrooms);
+        } else {
+          const filtered = restrooms.filter(
+            (restroom) =>
+              restroom &&
+              restroom.name &&
+              restroom.address &&
+              restroom.city &&
+              (restroom.name
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+                restroom.address
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()) ||
+                restroom.city.toLowerCase().includes(searchQuery.toLowerCase()))
           );
-        }}
-      >
+          setFilteredRestrooms(filtered);
+        }
+      } catch (error) {
+        console.error('Error in useEffect for filtering restrooms:', error);
+        setFilteredRestrooms([]);
+      }
+    }, [searchQuery, restrooms]);
+
+    const handleMarkerPress = (restroom: Restroom) => {
+      console.log('🎯 Marker pressed:', restroom.name);
+      setSelectedRestroom(restroom);
+    };
+
+    const closeBottomSheet = () => {
+      console.log('🔽 Closing bottom sheet');
+      setSelectedRestroom(null);
+    };
+
+    const zoomIn = () => {
+      if (!mapRef.current) return;
+      mapRef.current.getCamera().then((cam) => {
+        const newZoom = Math.min((cam.zoom ?? 14) + 1, 20);
+        cam.zoom = newZoom;
+        mapRef.current?.animateCamera(cam, { duration: 300 });
+      });
+    };
+
+    const zoomOut = () => {
+      if (!mapRef.current) return;
+      mapRef.current.getCamera().then((cam) => {
+        const newZoom = Math.max((cam.zoom ?? 14) - 1, 3);
+        cam.zoom = newZoom;
+        mapRef.current?.animateCamera(cam, { duration: 300 });
+      });
+    };
+
+    const centerOnUser = () => {
+      if (
+        userLocation &&
+        typeof userLocation.latitude === 'number' &&
+        typeof userLocation.longitude === 'number' &&
+        mapRef.current
+      ) {
+        mapRef.current.animateCamera(
+          {
+            center: {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            },
+            zoom: 15,
+          },
+          { duration: 400 }
+        );
+      }
+    };
+
+    const openInMaps = (restroom: Restroom) => {
+      const { latitude, longitude } = restroom.coordinates;
+
+      if (Platform.OS === 'ios') {
+        Alert.alert(
+          'Навигация',
+          `Отваряне на Apple Maps към ${restroom.name}...`
+        );
+      } else if (Platform.OS === 'android') {
+        Alert.alert(
+          'Навигация',
+          `Отваряне на Google Maps към ${restroom.name}...`
+        );
+      } else {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+        if (typeof window !== 'undefined') {
+          window.open(url, '_blank');
+        }
+      }
+    };
+
+    const FloatingMapControls = () => (
+      <View style={styles.mapControls}>
+        <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
+          <BlurView
+            intensity={theme === 'light' ? 80 : 60}
+            style={styles.controlBlur}
+          >
+            <View
+              style={[
+                styles.controlContent,
+                { backgroundColor: `${colors.surface}95` },
+              ]}
+            >
+              <ZoomIn size={18} color={colors.primary} strokeWidth={2} />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.controlButton} onPress={zoomOut}>
+          <BlurView
+            intensity={theme === 'light' ? 80 : 60}
+            style={styles.controlBlur}
+          >
+            <View
+              style={[
+                styles.controlContent,
+                { backgroundColor: `${colors.surface}95` },
+              ]}
+            >
+              <ZoomOut size={18} color={colors.primary} strokeWidth={2} />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.controlButton} onPress={centerOnUser}>
+          <BlurView
+            intensity={theme === 'light' ? 80 : 60}
+            style={styles.controlBlur}
+          >
+            <View
+              style={[
+                styles.controlContent,
+                { backgroundColor: `${colors.surface}95` },
+              ]}
+            >
+              <Locate size={18} color={colors.primary} strokeWidth={2} />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+      </View>
+    );
+
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+          backgroundColor="transparent"
+          translucent
+        />
+
         <MapView
           ref={mapRef}
           style={{ flex: 1 }}
@@ -264,7 +272,17 @@ export function MapWithBottomSheet({
           showsUserLocation
           showsMyLocationButton={false}
           initialRegion={mapRegion}
-          onRegionChangeComplete={setMapRegion}
+          onRegionChangeComplete={(region) => {
+            if (
+              region &&
+              typeof region.latitude === 'number' &&
+              typeof region.longitude === 'number' &&
+              typeof region.latitudeDelta === 'number' &&
+              typeof region.longitudeDelta === 'number'
+            ) {
+              setMapRegion(region);
+            }
+          }}
           showsCompass={false}
           showsScale={false}
           showsBuildings={false}
@@ -273,42 +291,65 @@ export function MapWithBottomSheet({
           rotateEnabled={false}
           pitchEnabled={false}
         >
-          {filteredRestrooms.map((restroom) => (
-            <Marker
-              key={restroom.id}
-              coordinate={{
-                latitude: restroom.coordinates.latitude,
-                longitude: restroom.coordinates.longitude,
-              }}
-              onPress={() => {
-                console.log('🎯 Marker pressed:', restroom.name);
-                handleMarkerPress(restroom);
-              }}
-              tracksViewChanges={false}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <Pin restroom={restroom} />
-            </Marker>
-          ))}
+          {filteredRestrooms
+            .filter(
+              (restroom) =>
+                restroom &&
+                restroom.coordinates &&
+                typeof restroom.coordinates.latitude === 'number' &&
+                typeof restroom.coordinates.longitude === 'number' &&
+                !isNaN(restroom.coordinates.latitude) &&
+                !isNaN(restroom.coordinates.longitude)
+            )
+            .map((restroom) => (
+              <Marker
+                key={restroom.id}
+                coordinate={{
+                  latitude: restroom.coordinates.latitude,
+                  longitude: restroom.coordinates.longitude,
+                }}
+                onPress={() => {
+                  console.log('🎯 Marker pressed:', restroom.name);
+                  handleMarkerPress(restroom);
+                }}
+                tracksViewChanges={false}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <Pin restroom={restroom} />
+              </Marker>
+            ))}
         </MapView>
-      </SuperCluster>
 
-      <AnimatedSearchBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        suggestions={restrooms}
-        onSuggestionPress={handleMarkerPress}
-      />
+        <AnimatedSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          suggestions={restrooms.filter(
+            (restroom) =>
+              restroom && restroom.name && restroom.address && restroom.city
+          )}
+          onSuggestionPress={handleMarkerPress}
+        />
 
-      <FloatingMapControls />
+        <FloatingMapControls />
 
-      <RestroomBottomSheet
-        restroom={selectedRestroom}
-        onClose={closeBottomSheet}
-        onNavigate={openInMaps}
-      />
-    </View>
-  );
+        <RestroomBottomSheet
+          restroom={selectedRestroom}
+          onClose={closeBottomSheet}
+          onNavigate={openInMaps}
+        />
+      </View>
+    );
+  } catch (error) {
+    console.error('MapWithBottomSheet: Critical error in component:', error);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Something went wrong loading the map</Text>
+        <Text style={{ fontSize: 12, marginTop: 8 }}>
+          {(error as Error)?.message || 'Unknown error'}
+        </Text>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

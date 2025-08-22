@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ClusteredMapView from 'react-native-map-clustering';
+
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import {
   View,
