@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import ClusteredMapView from 'react-native-map-clustering';
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import {
   View,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import SuperCluster from 'react-native-maps-super-cluster';
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
@@ -36,13 +36,10 @@ export function MapWithBottomSheet({
   userLocation,
 }: MapWithBottomSheetProps) {
   const { colors, theme } = useTheme();
-  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(
-    null
-  );
+  const [selectedRestroom, setSelectedRestroom] = useState<Restroom | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRestrooms, setFilteredRestrooms] =
-    useState<Restroom[]>(restrooms);
-  const [mapRegion, setMapRegion] = useState({
+  const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(restrooms);
+  const [mapRegion, setMapRegion] = useState<Region>({
     latitude: userLocation?.latitude || 42.6977,
     longitude: userLocation?.longitude || 23.3219,
     latitudeDelta: INITIAL_DELTA,
@@ -50,16 +47,6 @@ export function MapWithBottomSheet({
   });
 
   const mapRef = useRef<MapView | null>(null);
-
-  // Transform restrooms data for clustering
-  const clusterData = filteredRestrooms.map((restroom) => ({
-    geometry: {
-      coordinates: [restroom.coordinates.longitude, restroom.coordinates.latitude],
-    },
-    properties: {
-      restroom,
-    },
-  }));
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -78,6 +65,29 @@ export function MapWithBottomSheet({
   const handleMarkerPress = (restroom: Restroom) => {
     console.log('🎯 Marker pressed:', restroom.name);
     setSelectedRestroom(restroom);
+  };
+
+  const handleClusterPress = (cluster: any) => {
+    const { coordinate, pointCount, clusterId } = cluster;
+    
+    if (pointCount === 1) {
+      // Single marker in cluster - show details
+      const restroom = cluster.properties?.restroom;
+      if (restroom) {
+        handleMarkerPress(restroom);
+      }
+    } else {
+      // Multiple markers - zoom in
+      if (mapRef.current) {
+        const newDelta = mapRegion.latitudeDelta * 0.5;
+        mapRef.current.animateToRegion({
+          latitude: coordinate.latitude,
+          longitude: coordinate.longitude,
+          latitudeDelta: newDelta,
+          longitudeDelta: newDelta,
+        }, 500);
+      }
+    }
   };
 
   const closeBottomSheet = () => {
@@ -139,6 +149,18 @@ export function MapWithBottomSheet({
     }
   };
 
+  // Transform restrooms for SuperCluster
+  const clusterData = filteredRestrooms.map((restroom) => ({
+    geometry: {
+      type: 'Point' as const,
+      coordinates: [restroom.coordinates.longitude, restroom.coordinates.latitude],
+    },
+    properties: {
+      restroom,
+      point_count: 1,
+    },
+  }));
+
   const FloatingMapControls = () => (
     <View style={styles.mapControls}>
       <TouchableOpacity style={styles.controlButton} onPress={zoomIn}>
@@ -199,34 +221,77 @@ export function MapWithBottomSheet({
         translucent
       />
 
-      <MapView
-        ref={mapRef}
-        style={{ flex: 1 }}
-        provider={PROVIDER_GOOGLE}
-        customMapStyle={theme === 'light' ? lightStyle : darkStyle}
-        showsUserLocation
-        showsMyLocationButton={false}
-        initialRegion={mapRegion}
-        onRegionChangeComplete={setMapRegion}
+      <SuperCluster
+        data={clusterData}
+        radius={60}
+        maxZoom={16}
+        minZoom={3}
+        extent={512}
+        nodeSize={64}
+        region={mapRegion}
+        onExplode={handleClusterPress}
+        onImplode={handleClusterPress}
+        onClusterPress={handleClusterPress}
+        preserveClusterPressBehavior={false}
+        edgePadding={{ top: 100, left: 50, bottom: 100, right: 50 }}
+        animationEnabled={true}
+        layoutAnimationConf={{
+          type: 'spring',
+          property: 'scaleXY',
+          springDamping: 0.7,
+          duration: 300,
+        }}
+        renderCluster={(cluster) => {
+          const { coordinate, pointCount } = cluster;
+          return (
+            <Marker
+              key={`cluster-${cluster.clusterId}`}
+              coordinate={coordinate}
+              onPress={() => handleClusterPress(cluster)}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <Pin count={pointCount} />
+            </Marker>
+          );
+        }}
       >
-        {filteredRestrooms.map((restroom) => (
-          <Marker
-            key={restroom.id}
-            coordinate={{
-              latitude: restroom.coordinates.latitude,
-              longitude: restroom.coordinates.longitude,
-            }}
-            onPress={() => {
-              console.log('🎯 Marker pressed:', restroom.name);
-              handleMarkerPress(restroom);
-            }}
-            tracksViewChanges={false}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <Pin restroom={restroom} />
-          </Marker>
-        ))}
-      </MapView>
+        <MapView
+          ref={mapRef}
+          style={{ flex: 1 }}
+          provider={PROVIDER_GOOGLE}
+          customMapStyle={theme === 'light' ? lightStyle : darkStyle}
+          showsUserLocation
+          showsMyLocationButton={false}
+          initialRegion={mapRegion}
+          onRegionChangeComplete={setMapRegion}
+          showsCompass={false}
+          showsScale={false}
+          showsBuildings={false}
+          showsTraffic={false}
+          showsIndoors={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
+        >
+          {filteredRestrooms.map((restroom) => (
+            <Marker
+              key={restroom.id}
+              coordinate={{
+                latitude: restroom.coordinates.latitude,
+                longitude: restroom.coordinates.longitude,
+              }}
+              onPress={() => {
+                console.log('🎯 Marker pressed:', restroom.name);
+                handleMarkerPress(restroom);
+              }}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 1 }}
+            >
+              <Pin restroom={restroom} />
+            </Marker>
+          ))}
+        </MapView>
+      </SuperCluster>
 
       <AnimatedSearchBar
         searchQuery={searchQuery}

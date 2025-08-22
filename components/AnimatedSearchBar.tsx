@@ -82,21 +82,8 @@ export function AnimatedSearchBar({
 
   const handleSuggestionPress = (restroom: Restroom) => {
     onSuggestionPress(restroom);
-    // Don't auto-collapse when selecting suggestion
-    setIsExpanded(false);
-    Animated.parallel([
-      Animated.spring(animatedWidth, {
-        toValue: 52,
-        useNativeDriver: false,
-        tension: 100,
-        friction: 8,
-      }),
-      Animated.timing(animatedOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start();
+    // Auto-collapse when selecting suggestion
+    collapseSearch();
   };
 
   const handleSearchSubmit = () => {
