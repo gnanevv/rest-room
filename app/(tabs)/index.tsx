@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Platform, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Platform,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { MapWithBottomSheet } from '@/components/MapWithBottomSheet';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
 import { useTheme } from '@/hooks/useTheme';
+import { useRealRestrooms } from '@/hooks/useRealRestrooms';
 import * as Location from 'expo-location';
 
 export default function MapScreen() {
@@ -11,7 +19,16 @@ export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  // Ensure mockRestrooms is valid before setting state
+
+  // Get real restroom data from Google Places API
+  const {
+    realRestrooms,
+    isLoading: isLoadingReal,
+    error: realDataError,
+    refreshData,
+  } = useRealRestrooms();
+
+  // Combine mock and real data
   const [restrooms, setRestrooms] = useState<Restroom[]>(() => {
     try {
       if (!mockRestrooms || !Array.isArray(mockRestrooms)) {
@@ -29,22 +46,42 @@ export default function MapScreen() {
     getCurrentLocation();
   }, []);
 
-  // Ensure restrooms are properly initialized
+  // Combine mock and real data when either changes
   useEffect(() => {
     try {
-      if (!restrooms || !Array.isArray(restrooms)) {
-        console.warn('MapScreen: Restrooms state is invalid, reinitializing');
-        if (mockRestrooms && Array.isArray(mockRestrooms)) {
-          setRestrooms(mockRestrooms);
-        } else {
-          setRestrooms([]);
+      const mockData = Array.isArray(mockRestrooms) ? mockRestrooms : [];
+      const realData = Array.isArray(realRestrooms) ? realRestrooms : [];
+
+      // Combine and remove duplicates based on coordinates
+      const allRestrooms = [...mockData];
+
+      realData.forEach((realRestroom) => {
+        const isDuplicate = allRestrooms.some(
+          (mockRestroom) =>
+            Math.abs(
+              mockRestroom.coordinates.latitude -
+                realRestroom.coordinates.latitude
+            ) < 0.001 &&
+            Math.abs(
+              mockRestroom.coordinates.longitude -
+                realRestroom.coordinates.longitude
+            ) < 0.001
+        );
+
+        if (!isDuplicate) {
+          allRestrooms.push(realRestroom);
         }
-      }
+      });
+
+      setRestrooms(allRestrooms);
+      console.log(
+        `🔄 Combined data: ${mockData.length} mock + ${realData.length} real = ${allRestrooms.length} total`
+      );
     } catch (error) {
-      console.error('MapScreen: Error in restrooms useEffect:', error);
-      setRestrooms([]);
+      console.error('MapScreen: Error combining restroom data:', error);
+      setRestrooms(mockRestrooms || []);
     }
-  }, [restrooms]);
+  }, [mockRestrooms, realRestrooms]);
 
   const getCurrentLocation = async () => {
     try {
@@ -130,12 +167,76 @@ export default function MapScreen() {
   };
 
   // Debug logging
-  console.log('MapScreen render:', { 
-    restrooms, 
-    restroomsType: typeof restrooms, 
+  console.log('MapScreen render:', {
+    restrooms,
+    restroomsType: typeof restrooms,
     isArray: Array.isArray(restrooms),
-    length: restrooms?.length 
+    length: restrooms?.length,
   });
+
+  // Show loading state while fetching real data
+  if (isLoadingReal && restrooms.length === 0) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+          },
+        ]}
+      >
+        <Text style={{ color: colors.text, fontSize: 16, marginBottom: 8 }}>
+          🔍 Searching for restrooms...
+        </Text>
+        <Text style={{ color: colors.text, fontSize: 12, opacity: 0.7 }}>
+          This may take a few seconds
+        </Text>
+      </View>
+    );
+  }
+
+  // Show error state if real data failed to load
+  if (realDataError && restrooms.length === 0) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+          },
+        ]}
+      >
+        <Text style={{ color: colors.text, fontSize: 16, marginBottom: 8 }}>
+          ❌ Failed to load restrooms
+        </Text>
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: 12,
+            opacity: 0.7,
+            marginBottom: 16,
+          }}
+        >
+          {realDataError}
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.primary,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={refreshData}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   // Safety check before rendering
   if (!restrooms || !Array.isArray(restrooms)) {
@@ -168,6 +269,7 @@ export default function MapScreen() {
               }
             : undefined
         }
+        onRefresh={refreshData}
       />
     </View>
   );

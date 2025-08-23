@@ -15,7 +15,7 @@ import { BlurView } from 'expo-blur';
 import darkStyle from '@/constants/mapStyle';
 import lightStyle from '@/constants/mapStyleLight';
 import Pin from '@/components/Pin';
-import { ZoomIn, ZoomOut, Locate } from 'lucide-react-native';
+import { ZoomIn, ZoomOut, Locate, RefreshCw } from 'lucide-react-native';
 import { Restroom } from '@/types/restroom';
 import { useTheme } from '@/hooks/useTheme';
 import { RestroomBottomSheet } from '@/components/RestroomBottomSheet';
@@ -27,6 +27,7 @@ interface MapWithBottomSheetProps {
     latitude: number;
     longitude: number;
   };
+  onRefresh?: () => void;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -35,6 +36,7 @@ const INITIAL_DELTA = 0.02;
 export function MapWithBottomSheet({
   restrooms,
   userLocation,
+  onRefresh,
 }: MapWithBottomSheetProps) {
   try {
     // IMMEDIATE safety check - if restrooms is undefined/null, return early
@@ -250,6 +252,31 @@ export function MapWithBottomSheet({
               ]}
             >
               <Locate size={18} color={colors.primary} strokeWidth={2} />
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+
+        {/* Refresh button for real data */}
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => {
+            if (onRefresh) {
+              onRefresh();
+              console.log('🔄 Refresh button pressed');
+            }
+          }}
+        >
+          <BlurView
+            intensity={theme === 'light' ? 80 : 60}
+            style={styles.controlBlur}
+          >
+            <View
+              style={[
+                styles.controlContent,
+                { backgroundColor: `${colors.surface}95` },
+              ]}
+            >
+              <RefreshCw size={18} color={colors.primary} strokeWidth={2} />
             </View>
           </BlurView>
         </TouchableOpacity>
