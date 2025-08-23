@@ -98,7 +98,18 @@ class PlacesService {
     ]
   ): Promise<Restroom[]> {
     if (!this.apiKey) {
-      console.error('No API key available');
+      console.warn(
+        'No Google Places API key available. Set EXPO_PUBLIC_GOOGLE_PLACES_API_KEY in your .env file'
+      );
+      console.warn(
+        'For now, returning empty results. Check REAL_DATA_SETUP.md for setup instructions.'
+      );
+      return [];
+    }
+
+    // Validate input parameters
+    if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+      console.error('Invalid coordinates provided:', { latitude, longitude });
       return [];
     }
 
@@ -107,19 +118,39 @@ class PlacesService {
 
       // Search for each type separately to get better results
       for (const type of types) {
-        const url = `${this.baseUrl}/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=${type}&key=${this.apiKey}`;
-
-        const response = await fetch(url);
-        const data: PlacesSearchResponse = await response.json();
-
-        if (data.status === 'OK') {
-          // Convert Google Places to our Restroom format
-          const restrooms = data.results.map((place) =>
-            this.convertPlaceToRestroom(place, type)
+        try {
+          console.log(
+            `🔍 Searching for ${type} near ${latitude}, ${longitude}`
           );
-          results.push(...restrooms);
-        } else {
-          console.warn(`Places API error for type ${type}:`, data.status);
+          const url = `${this.baseUrl}/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=${type}&key=${this.apiKey}`;
+
+          const response = await fetch(url);
+          const data: PlacesSearchResponse = await response.json();
+
+          if (data.status === 'OK') {
+            console.log(`✅ Found ${data.results.length} ${type} places`);
+            // Convert Google Places to our Restroom format and filter out invalid coordinates
+            const validPlaces = data.results.filter(
+              (place) =>
+                place.geometry?.location?.lat &&
+                place.geometry?.location?.lng &&
+                !isNaN(place.geometry.location.lat) &&
+                !isNaN(place.geometry.location.lng)
+            );
+            console.log(
+              `✅ ${validPlaces.length} places have valid coordinates`
+            );
+
+            const restrooms = validPlaces.map((place) =>
+              this.convertPlaceToRestroom(place, type)
+            );
+            results.push(...restrooms);
+          } else {
+            console.warn(`Places API error for type ${type}:`, data.status);
+          }
+        } catch (error) {
+          console.error(`Error searching for type ${type}:`, error);
+          // Continue with other types even if one fails
         }
       }
 
@@ -169,7 +200,13 @@ class PlacesService {
     searchType: string
   ): Restroom {
     // Determine business type based on search type and place types
-    let businessType: string = 'public';
+    let businessType:
+      | 'restaurant'
+      | 'cafe'
+      | 'bar'
+      | 'public'
+      | 'gas_station'
+      | 'mall' = 'public';
     let isPaid = false;
     let price: number | undefined;
 
@@ -197,22 +234,22 @@ class PlacesService {
     }
 
     // Determine availability based on opening hours
-    let availability: string = 'available';
+    let availability: 'available' | 'occupied' | 'out_of_order' = 'available';
     let isOpen = true;
 
     if (place.opening_hours) {
       isOpen = place.opening_hours.open_now;
-      availability = isOpen ? 'available' : 'closed';
+      availability = isOpen ? 'available' : 'out_of_order';
     }
 
     return {
       id: place.place_id,
-      name: place.name,
-      address: place.formatted_address,
+      name: place.name || 'Unnamed location',
+      address: place.formatted_address || 'Address not available',
       city: this.extractCity(place.formatted_address),
       coordinates: {
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
+        latitude: place.geometry?.location?.lat || 0,
+        longitude: place.geometry?.location?.lng || 0,
       },
       distance: 0, // Will be calculated later
       rating: place.rating || 0,
@@ -247,11 +284,9 @@ class PlacesService {
       'toilet'
     );
 
-    // Add additional details
+    // Add additional details - only include properties that exist in Restroom type
     return {
       ...baseRestroom,
-      website: place.website,
-      phone: place.international_phone_number,
       reviews: place.reviews
         ? place.reviews.map((review) => ({
             id: `review_${review.time}`,
@@ -271,12 +306,21 @@ class PlacesService {
   /**
    * Extract city from formatted address
    */
-  private extractCity(address: string): string {
-    const parts = address.split(',');
-    if (parts.length >= 2) {
-      return parts[parts.length - 2].trim();
+  private extractCity(address: string | undefined): string {
+    if (!address || typeof address !== 'string') {
+      return 'Unknown location';
     }
-    return address;
+
+    try {
+      const parts = address.split(',');
+      if (parts.length >= 2) {
+        return parts[parts.length - 2].trim();
+      }
+      return address;
+    } catch (error) {
+      console.warn('Error extracting city from address:', address, error);
+      return 'Unknown location';
+    }
   }
 
   /**

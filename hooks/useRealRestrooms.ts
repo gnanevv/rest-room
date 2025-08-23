@@ -39,6 +39,14 @@ export function useRealRestrooms(): UseRealRestroomsReturn {
           radius
         );
 
+        if (restrooms.length === 0) {
+          console.log('ℹ️ No real restrooms found. This could be due to:');
+          console.log('   - Missing API key (check .env file)');
+          console.log('   - No places in the area');
+          console.log('   - API quota exceeded');
+          console.log('   - Network issues');
+        }
+
         // Calculate distances from the search location
         const restroomsWithDistance = restrooms.map((restroom) => ({
           ...restroom,

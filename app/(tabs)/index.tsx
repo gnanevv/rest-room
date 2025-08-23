@@ -166,14 +166,6 @@ export default function MapScreen() {
     }
   };
 
-  // Debug logging
-  console.log('MapScreen render:', {
-    restrooms,
-    restroomsType: typeof restrooms,
-    isArray: Array.isArray(restrooms),
-    length: restrooms?.length,
-  });
-
   // Show loading state while fetching real data
   if (isLoadingReal && restrooms.length === 0) {
     return (
