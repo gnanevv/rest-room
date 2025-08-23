@@ -15,6 +15,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { MapPin, Camera, Star, Euro, Accessibility, Clock, Building, Phone, Globe, Plus, X, Locate, CircleCheck as CheckCircle, ArrowRight, ArrowLeft, Sparkles, Award, Target, Coffee, Utensils, ShoppingBag, Fuel, Users, Wifi, Car, Baby, Droplets, Wind, Music, Shield, Upload, Eye, Send, ChevronRight, Info, Zap } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import * as ImagePicker from 'expo-image-picker';
@@ -122,6 +129,10 @@ export default function AddRestroomScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
+  // Animation values
+  const progressAnimation = useSharedValue(1 / totalSteps);
+  const stepAnimation = useSharedValue(0);
+
   const updateFormData = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -168,12 +179,16 @@ export default function AddRestroomScreen() {
   const nextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      progressAnimation.value = withSpring(currentStep + 1 / totalSteps);
+      stepAnimation.value = withTiming(1, { duration: 300 });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      progressAnimation.value = withSpring((currentStep - 1) / totalSteps);
+      stepAnimation.value = withTiming(0, { duration: 300 });
     }
   };
 
@@ -283,18 +298,35 @@ export default function AddRestroomScreen() {
       longitude: null,
     });
     setCurrentStep(1);
+    progressAnimation.value = withSpring(1 / totalSteps);
   };
+
+  // Animated styles
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressAnimation.value * 100}%`,
+  }));
+
+  const stepStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(1, { duration: 400 }),
+    transform: [
+      {
+        translateX: withSpring(stepAnimation.value * 10, {
+          damping: 20,
+          stiffness: 100,
+        }),
+      },
+    ],
+  }));
 
   const renderProgressBar = () => (
     <View style={styles.progressContainer}>
       <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-        <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
-          style={[
-            styles.progressFill,
-            { width: `${(currentStep / totalSteps) * 100}%` },
-          ]}
-        />
+        <Animated.View style={[progressStyle]}>
+          <LinearGradient
+            colors={[colors.primary, colors.primaryDark]}
+            style={styles.progressFill}
+          />
+        </Animated.View>
       </View>
       <Text style={[styles.progressText, { color: colors.textSecondary }]}>
         Стъпка {currentStep} от {totalSteps}
@@ -302,451 +334,608 @@ export default function AddRestroomScreen() {
     </View>
   );
 
-  const renderStep1 = () => (
-    <ScrollView 
-      style={styles.stepContent} 
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.stepHeader}>
-        <LinearGradient
-          colors={['#10B981', '#34D399']}
-          style={styles.stepIconContainer}
+  const BusinessTypeCard = ({ type }: { type: typeof businessTypes[0] }) => {
+    const isSelected = formData.businessType === type.key;
+    const scaleAnimation = useSharedValue(1);
+    const borderAnimation = useSharedValue(0);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scaleAnimation.value }],
+      borderColor: interpolateColor(
+        borderAnimation.value,
+        [0, 1],
+        [colors.border, colors.primary]
+      ),
+      shadowOpacity: withTiming(isSelected ? 0.3 : 0.1, { duration: 200 }),
+      elevation: withTiming(isSelected ? 12 : 4, { duration: 200 }),
+    }));
+
+    const gradientStyle = useAnimatedStyle(() => ({
+      opacity: withTiming(isSelected ? 1 : 0, { duration: 300 }),
+    }));
+
+    const contentStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          scale: withTiming(isSelected ? 1.05 : 1, { duration: 200 }),
+        },
+      ],
+    }));
+
+    React.useEffect(() => {
+      if (isSelected) {
+        scaleAnimation.value = withSpring(1.02, { damping: 15, stiffness: 200 });
+        borderAnimation.value = withTiming(1, { duration: 300 });
+      } else {
+        scaleAnimation.value = withSpring(1, { damping: 15, stiffness: 200 });
+        borderAnimation.value = withTiming(0, { duration: 300 });
+      }
+    }, [isSelected]);
+
+    const handlePress = () => {
+      scaleAnimation.value = withSpring(0.95, { damping: 15, stiffness: 300 }, () => {
+        scaleAnimation.value = withSpring(isSelected ? 1.02 : 1, { damping: 15, stiffness: 200 });
+      });
+      updateFormData('businessType', type.key);
+    };
+
+    return (
+      <TouchableOpacity
+        onPress={handlePress}
+        activeOpacity={0.9}
+        style={styles.businessCardWrapper}
+      >
+        <Animated.View
+          style={[
+            styles.businessCard,
+            {
+              backgroundColor: colors.surface,
+              borderWidth: 2,
+              shadowColor: colors.primary,
+            },
+            animatedStyle,
+          ]}
         >
-          <Building size={28} color="#FFFFFF" strokeWidth={2.5} />
-        </LinearGradient>
-        <Text style={[styles.stepTitle, { color: colors.text }]}>
-          Основна информация
-        </Text>
-        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-          Започнете с основните детайли за тоалетната
-        </Text>
-      </View>
-
-      <View style={styles.formSection}>
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>
-            Име на заведението
-          </Text>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Building size={20} color={colors.primary} strokeWidth={2} />
-            <TextInput
-              style={[styles.textInput, { color: colors.text }]}
-              placeholder="напр. Кафе Централ, Мол София..."
-              placeholderTextColor={colors.textTertiary}
-              value={formData.name}
-              onChangeText={(text) => updateFormData('name', text)}
+          <Animated.View style={[styles.businessCardGradientOverlay, gradientStyle]}>
+            <LinearGradient
+              colors={type.gradient as [string, string]}
+              style={styles.businessCardGradient}
             />
-          </View>
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>Адрес</Text>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MapPin size={20} color={colors.primary} strokeWidth={2} />
-            <TextInput
-              style={[styles.textInput, { color: colors.text }]}
-              placeholder="ул. Витоша 1, София"
-              placeholderTextColor={colors.textTertiary}
-              value={formData.address}
-              onChangeText={(text) => updateFormData('address', text)}
-            />
-            <TouchableOpacity
-              onPress={getCurrentLocation}
-              style={styles.locationBtn}
+          </Animated.View>
+          
+          <Animated.View style={[styles.businessCardContent, contentStyle]}>
+            <View
+              style={[
+                styles.businessIcon,
+                {
+                  backgroundColor: isSelected
+                    ? 'rgba(255,255,255,0.25)'
+                    : colors.background,
+                },
+              ]}
             >
-              <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
-                style={styles.locationBtnGradient}
-              >
-                <Locate size={16} color="#FFFFFF" strokeWidth={2} />
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>
-            Тип заведение
-          </Text>
-          <View style={styles.businessGrid}>
-            {businessTypes.map((type) => (
-              <TouchableOpacity
-                key={type.key}
-                style={[
-                  styles.businessCard,
-                  {
-                    borderColor:
-                      formData.businessType === type.key
-                        ? colors.primary
-                        : colors.border,
-                    backgroundColor: colors.surface,
-                  },
-                ]}
-                onPress={() => updateFormData('businessType', type.key)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={
-                    formData.businessType === type.key
-                      ? (type.gradient as [string, string])
-                      : ([colors.surface, colors.surface] as [string, string])
-                  }
-                  style={styles.businessCardGradient}
-                >
-                  <View
-                    style={[
-                      styles.businessIcon,
-                      {
-                        backgroundColor:
-                          formData.businessType === type.key
-                            ? 'rgba(255,255,255,0.2)'
-                            : colors.background,
-                      },
-                    ]}
-                  >
-                    <type.icon
-                      size={24}
-                      color={
-                        formData.businessType === type.key
-                          ? '#FFFFFF'
-                          : type.gradient[0]
-                      }
-                      strokeWidth={2}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.businessLabel,
-                      {
-                        color:
-                          formData.businessType === type.key
-                            ? '#FFFFFF'
-                            : colors.text,
-                      },
-                    ]}
-                  >
-                    {type.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.businessDescription,
-                      {
-                        color:
-                          formData.businessType === type.key
-                            ? 'rgba(255,255,255,0.8)'
-                            : colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {type.description}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep2 = () => (
-    <ScrollView 
-      style={styles.stepContent} 
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.stepHeader}>
-        <LinearGradient
-          colors={['#8B5CF6', '#A78BFA']}
-          style={styles.stepIconContainer}
-        >
-          <Award size={28} color="#FFFFFF" strokeWidth={2.5} />
-        </LinearGradient>
-        <Text style={[styles.stepTitle, { color: colors.text }]}>
-          Удобства и детайли
-        </Text>
-        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-          Добавете информация за удобствата и достъпността
-        </Text>
-      </View>
-
-      <View style={styles.formSection}>
-        {/* Payment Section */}
-        <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.featureHeader}>
-            <View style={styles.featureIconContainer}>
-              <LinearGradient
-                colors={['#F59E0B', '#FBBF24']}
-                style={styles.featureIcon}
-              >
-                <Euro size={20} color="#FFFFFF" strokeWidth={2} />
-              </LinearGradient>
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: colors.text }]}>
-                  Платена тоалетна
-                </Text>
-                <Text style={[styles.featureSubtitle, { color: colors.textSecondary }]}>
-                  Има ли такса за ползване?
-                </Text>
-              </View>
+              <type.icon
+                size={24}
+                color={isSelected ? '#FFFFFF' : type.gradient[0]}
+                strokeWidth={2.5}
+              />
             </View>
-            <Switch
-              value={formData.isPaid}
-              onValueChange={(value) => updateFormData('isPaid', value)}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.background}
-              ios_backgroundColor={colors.border}
-            />
-          </View>
+            <Text
+              style={[
+                styles.businessLabel,
+                {
+                  color: isSelected ? '#FFFFFF' : colors.text,
+                },
+              ]}
+            >
+              {type.label}
+            </Text>
+            <Text
+              style={[
+                styles.businessDescription,
+                {
+                  color: isSelected
+                    ? 'rgba(255,255,255,0.9)'
+                    : colors.textSecondary,
+                },
+              ]}
+            >
+              {type.description}
+            </Text>
+          </Animated.View>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
 
-          {formData.isPaid && (
-            <View style={styles.priceSection}>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Euro size={18} color={colors.warning} strokeWidth={2} />
+  const AmenityChip = ({ amenity }: { amenity: typeof availableAmenities[0] }) => {
+    const isSelected = formData.amenities.includes(amenity.name);
+    const scaleAnimation = useSharedValue(1);
+    const backgroundAnimation = useSharedValue(0);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scaleAnimation.value }],
+      backgroundColor: interpolateColor(
+        backgroundAnimation.value,
+        [0, 1],
+        [colors.background, amenity.color]
+      ),
+      borderColor: interpolateColor(
+        backgroundAnimation.value,
+        [0, 1],
+        [colors.border, amenity.color]
+      ),
+    }));
+
+    const textStyle = useAnimatedStyle(() => ({
+      color: interpolateColor(
+        backgroundAnimation.value,
+        [0, 1],
+        [colors.text, '#FFFFFF']
+      ),
+    }));
+
+    const iconStyle = useAnimatedStyle(() => ({
+      color: interpolateColor(
+        backgroundAnimation.value,
+        [0, 1],
+        [amenity.color, '#FFFFFF']
+      ),
+    }));
+
+    React.useEffect(() => {
+      if (isSelected) {
+        backgroundAnimation.value = withTiming(1, { duration: 200 });
+      } else {
+        backgroundAnimation.value = withTiming(0, { duration: 200 });
+      }
+    }, [isSelected]);
+
+    const handlePress = () => {
+      scaleAnimation.value = withSpring(0.95, { damping: 15, stiffness: 300 }, () => {
+        scaleAnimation.value = withSpring(1, { damping: 15, stiffness: 200 });
+      });
+      toggleAmenity(amenity.name);
+    };
+
+    return (
+      <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
+        <Animated.View
+          style={[
+            styles.amenityChip,
+            {
+              borderWidth: 2,
+              shadowColor: amenity.color,
+              shadowOpacity: isSelected ? 0.3 : 0.1,
+              elevation: isSelected ? 8 : 3,
+            },
+            animatedStyle,
+          ]}
+        >
+          <Animated.View style={iconStyle}>
+            <amenity.icon size={16} strokeWidth={2} />
+          </Animated.View>
+          <Animated.Text style={[styles.amenityText, textStyle]}>
+            {amenity.name}
+          </Animated.Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderStep1 = () => (
+    <Animated.View style={stepStyle}>
+      <ScrollView 
+        style={styles.stepContent} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.stepHeader}>
+          <LinearGradient
+            colors={['#10B981', '#34D399']}
+            style={styles.stepIconContainer}
+          >
+            <Building size={28} color="#FFFFFF" strokeWidth={2.5} />
+          </LinearGradient>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
+            Основна информация
+          </Text>
+          <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+            Започнете с основните детайли за тоалетната
+          </Text>
+        </View>
+
+        <View style={styles.formSection}>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Име на заведението
+            </Text>
+            <BlurView
+              intensity={theme === 'light' ? 20 : 40}
+              style={styles.inputBlur}
+            >
+              <View style={[styles.inputWrapper, { 
+                backgroundColor: `${colors.surface}95`,
+                borderColor: formData.name ? colors.primary : colors.border,
+                borderWidth: formData.name ? 2 : 1,
+              }]}>
+                <Building size={20} color={colors.primary} strokeWidth={2} />
                 <TextInput
                   style={[styles.textInput, { color: colors.text }]}
-                  placeholder="0.50"
+                  placeholder="напр. Кафе Централ, Мол София..."
                   placeholderTextColor={colors.textTertiary}
-                  value={formData.price}
-                  onChangeText={(text) => updateFormData('price', text)}
-                  keyboardType="decimal-pad"
+                  value={formData.name}
+                  onChangeText={(text) => updateFormData('name', text)}
                 />
-                <Text style={[styles.currencyLabel, { color: colors.textSecondary }]}>
-                  лв
-                </Text>
               </View>
-            </View>
-          )}
-        </View>
-
-        {/* Accessibility Section */}
-        <View style={[styles.featureCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.featureHeader}>
-            <View style={styles.featureIconContainer}>
-              <LinearGradient
-                colors={['#10B981', '#34D399']}
-                style={styles.featureIcon}
-              >
-                <Accessibility size={20} color="#FFFFFF" strokeWidth={2} />
-              </LinearGradient>
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: colors.text }]}>
-                  Достъпност
-                </Text>
-                <Text style={[styles.featureSubtitle, { color: colors.textSecondary }]}>
-                  Достъпна за хора с увреждания
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={formData.accessibility}
-              onValueChange={(value) => updateFormData('accessibility', value)}
-              trackColor={{ false: colors.border, true: colors.success }}
-              thumbColor={colors.background}
-              ios_backgroundColor={colors.border}
-            />
+            </BlurView>
           </View>
-        </View>
 
-        {/* Amenities Section */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>
-            Удобства
-          </Text>
-          <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
-            Изберете наличните удобства
-          </Text>
-          <View style={styles.amenitiesGrid}>
-            {availableAmenities.map((amenity) => (
-              <TouchableOpacity
-                key={amenity.name}
-                style={[
-                  styles.amenityChip,
-                  {
-                    backgroundColor: formData.amenities.includes(amenity.name)
-                      ? amenity.color
-                      : colors.background,
-                    borderColor: formData.amenities.includes(amenity.name)
-                      ? amenity.color
-                      : colors.border,
-                  },
-                ]}
-                onPress={() => toggleAmenity(amenity.name)}
-                activeOpacity={0.8}
-              >
-                <amenity.icon
-                  size={16}
-                  color={
-                    formData.amenities.includes(amenity.name)
-                      ? '#FFFFFF'
-                      : amenity.color
-                  }
-                  strokeWidth={2}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Адрес</Text>
+            <BlurView
+              intensity={theme === 'light' ? 20 : 40}
+              style={styles.inputBlur}
+            >
+              <View style={[styles.inputWrapper, { 
+                backgroundColor: `${colors.surface}95`,
+                borderColor: formData.address ? colors.primary : colors.border,
+                borderWidth: formData.address ? 2 : 1,
+              }]}>
+                <MapPin size={20} color={colors.primary} strokeWidth={2} />
+                <TextInput
+                  style={[styles.textInput, { color: colors.text }]}
+                  placeholder="ул. Витоша 1, София"
+                  placeholderTextColor={colors.textTertiary}
+                  value={formData.address}
+                  onChangeText={(text) => updateFormData('address', text)}
                 />
-                <Text
-                  style={[
-                    styles.amenityText,
-                    {
-                      color: formData.amenities.includes(amenity.name)
-                        ? '#FFFFFF'
-                        : colors.text,
-                    },
-                  ]}
+                <TouchableOpacity
+                  onPress={getCurrentLocation}
+                  style={styles.locationBtn}
                 >
-                  {amenity.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Description */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.text }]}>
-            Описание
-          </Text>
-          <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
-            Споделете полезна информация за тоалетната
-          </Text>
-          <View style={[styles.textAreaWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <TextInput
-              style={[styles.textArea, { color: colors.text }]}
-              placeholder="Опишете състоянието, чистотата, особеностите..."
-              placeholderTextColor={colors.textTertiary}
-              value={formData.description}
-              onChangeText={(text) => updateFormData('description', text)}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep3 = () => (
-    <ScrollView 
-      style={styles.stepContent} 
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.stepHeader}>
-        <LinearGradient
-          colors={['#EC4899', '#F472B6']}
-          style={styles.stepIconContainer}
-        >
-          <Camera size={28} color="#FFFFFF" strokeWidth={2.5} />
-        </LinearGradient>
-        <Text style={[styles.stepTitle, { color: colors.text }]}>
-          Снимки и преглед
-        </Text>
-        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-          Добавете снимки и прегледайте информацията
-        </Text>
-      </View>
-
-      <View style={styles.formSection}>
-        {/* Photo Upload */}
-        <TouchableOpacity
-          style={[styles.uploadCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={pickImage}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#3B82F6', '#1E40AF']}
-            style={styles.uploadGradient}
-          >
-            <Upload size={32} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.uploadTitle}>Добави снимка</Text>
-            <Text style={styles.uploadSubtitle}>
-              Натиснете за избор от галерията
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Photos Grid */}
-        {formData.photos.length > 0 && (
-          <View style={styles.photosSection}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>
-              Добавени снимки ({formData.photos.length})
-            </Text>
-            <View style={styles.photosGrid}>
-              {formData.photos.map((photo, index) => (
-                <View key={index} style={styles.photoContainer}>
-                  <Image source={{ uri: photo }} style={styles.photoImage} />
-                  <TouchableOpacity
-                    style={[styles.removePhotoBtn, { backgroundColor: colors.error }]}
-                    onPress={() => removePhoto(index)}
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.locationBtnGradient}
                   >
-                    <X size={14} color="#FFFFFF" strokeWidth={2} />
-                  </TouchableOpacity>
-                </View>
+                    <Locate size={16} color="#FFFFFF" strokeWidth={2} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </BlurView>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Тип заведение
+            </Text>
+            <View style={styles.businessGrid}>
+              {businessTypes.map((type) => (
+                <BusinessTypeCard key={type.key} type={type} />
               ))}
             </View>
           </View>
-        )}
+        </View>
+      </ScrollView>
+    </Animated.View>
+  );
 
-        {/* Summary Card */}
-        <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.summaryHeader}>
-            <LinearGradient
-              colors={['#10B981', '#34D399']}
-              style={styles.summaryIcon}
-            >
-              <Eye size={20} color="#FFFFFF" strokeWidth={2} />
-            </LinearGradient>
-            <Text style={[styles.summaryTitle, { color: colors.text }]}>
-              Преглед на информацията
+  const renderStep2 = () => (
+    <Animated.View style={stepStyle}>
+      <ScrollView 
+        style={styles.stepContent} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.stepHeader}>
+          <LinearGradient
+            colors={['#8B5CF6', '#A78BFA']}
+            style={styles.stepIconContainer}
+          >
+            <Award size={28} color="#FFFFFF" strokeWidth={2.5} />
+          </LinearGradient>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
+            Удобства и детайли
+          </Text>
+          <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+            Добавете информация за удобствата и достъпността
+          </Text>
+        </View>
+
+        <View style={styles.formSection}>
+          {/* Payment Section */}
+          <BlurView
+            intensity={theme === 'light' ? 15 : 30}
+            style={styles.featureCardBlur}
+          >
+            <View style={[styles.featureCard, { 
+              backgroundColor: `${colors.surface}90`,
+              borderColor: colors.border,
+            }]}>
+              <View style={styles.featureHeader}>
+                <View style={styles.featureIconContainer}>
+                  <LinearGradient
+                    colors={['#F59E0B', '#FBBF24']}
+                    style={styles.featureIcon}
+                  >
+                    <Euro size={20} color="#FFFFFF" strokeWidth={2} />
+                  </LinearGradient>
+                  <View style={styles.featureText}>
+                    <Text style={[styles.featureTitle, { color: colors.text }]}>
+                      Платена тоалетна
+                    </Text>
+                    <Text style={[styles.featureSubtitle, { color: colors.textSecondary }]}>
+                      Има ли такса за ползване?
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={formData.isPaid}
+                  onValueChange={(value) => updateFormData('isPaid', value)}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.background}
+                  ios_backgroundColor={colors.border}
+                />
+              </View>
+
+              {formData.isPaid && (
+                <View style={styles.priceSection}>
+                  <BlurView
+                    intensity={theme === 'light' ? 10 : 20}
+                    style={styles.inputBlur}
+                  >
+                    <View style={[styles.inputWrapper, { 
+                      backgroundColor: `${colors.background}95`,
+                      borderColor: formData.price ? colors.warning : colors.border,
+                      borderWidth: formData.price ? 2 : 1,
+                    }]}>
+                      <Euro size={18} color={colors.warning} strokeWidth={2} />
+                      <TextInput
+                        style={[styles.textInput, { color: colors.text }]}
+                        placeholder="0.50"
+                        placeholderTextColor={colors.textTertiary}
+                        value={formData.price}
+                        onChangeText={(text) => updateFormData('price', text)}
+                        keyboardType="decimal-pad"
+                      />
+                      <Text style={[styles.currencyLabel, { color: colors.textSecondary }]}>
+                        лв
+                      </Text>
+                    </View>
+                  </BlurView>
+                </View>
+              )}
+            </View>
+          </BlurView>
+
+          {/* Accessibility Section */}
+          <BlurView
+            intensity={theme === 'light' ? 15 : 30}
+            style={styles.featureCardBlur}
+          >
+            <View style={[styles.featureCard, { 
+              backgroundColor: `${colors.surface}90`,
+              borderColor: colors.border,
+            }]}>
+              <View style={styles.featureHeader}>
+                <View style={styles.featureIconContainer}>
+                  <LinearGradient
+                    colors={['#10B981', '#34D399']}
+                    style={styles.featureIcon}
+                  >
+                    <Accessibility size={20} color="#FFFFFF" strokeWidth={2} />
+                  </LinearGradient>
+                  <View style={styles.featureText}>
+                    <Text style={[styles.featureTitle, { color: colors.text }]}>
+                      Достъпност
+                    </Text>
+                    <Text style={[styles.featureSubtitle, { color: colors.textSecondary }]}>
+                      Достъпна за хора с увреждания
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={formData.accessibility}
+                  onValueChange={(value) => updateFormData('accessibility', value)}
+                  trackColor={{ false: colors.border, true: colors.success }}
+                  thumbColor={colors.background}
+                  ios_backgroundColor={colors.border}
+                />
+              </View>
+            </View>
+          </BlurView>
+
+          {/* Amenities Section */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Удобства
             </Text>
+            <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
+              Изберете наличните удобства
+            </Text>
+            <View style={styles.amenitiesGrid}>
+              {availableAmenities.map((amenity) => (
+                <AmenityChip key={amenity.name} amenity={amenity} />
+              ))}
+            </View>
           </View>
 
-          <View style={styles.summaryContent}>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                Име:
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {formData.name || 'Не е въведено'}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                Адрес:
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {formData.address || 'Не е въведен'}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                Тип:
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {businessTypes.find((t) => t.key === formData.businessType)?.label}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                Цена:
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {formData.isPaid ? `${formData.price || '0'} лв` : 'Безплатно'}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-                Удобства:
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {formData.amenities.length} избрани
-              </Text>
-            </View>
+          {/* Description */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Описание
+            </Text>
+            <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
+              Споделете полезна информация за тоалетната
+            </Text>
+            <BlurView
+              intensity={theme === 'light' ? 15 : 30}
+              style={styles.inputBlur}
+            >
+              <View style={[styles.textAreaWrapper, { 
+                backgroundColor: `${colors.surface}90`,
+                borderColor: formData.description ? colors.primary : colors.border,
+                borderWidth: formData.description ? 2 : 1,
+              }]}>
+                <TextInput
+                  style={[styles.textArea, { color: colors.text }]}
+                  placeholder="Опишете състоянието, чистотата, особеностите..."
+                  placeholderTextColor={colors.textTertiary}
+                  value={formData.description}
+                  onChangeText={(text) => updateFormData('description', text)}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+            </BlurView>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </Animated.View>
+  );
+
+  const renderStep3 = () => (
+    <Animated.View style={stepStyle}>
+      <ScrollView 
+        style={styles.stepContent} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.stepHeader}>
+          <LinearGradient
+            colors={['#EC4899', '#F472B6']}
+            style={styles.stepIconContainer}
+          >
+            <Camera size={28} color="#FFFFFF" strokeWidth={2.5} />
+          </LinearGradient>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
+            Снимки и преглед
+          </Text>
+          <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+            Добавете снимки и прегледайте информацията
+          </Text>
+        </View>
+
+        <View style={styles.formSection}>
+          {/* Photo Upload */}
+          <TouchableOpacity
+            style={styles.uploadCardWrapper}
+            onPress={pickImage}
+            activeOpacity={0.9}
+          >
+            <BlurView
+              intensity={theme === 'light' ? 20 : 40}
+              style={styles.uploadCardBlur}
+            >
+              <View style={[styles.uploadCard, { 
+                backgroundColor: `${colors.surface}80`,
+                borderColor: colors.border,
+              }]}>
+                <LinearGradient
+                  colors={['#3B82F6', '#1E40AF']}
+                  style={styles.uploadGradient}
+                >
+                  <Upload size={32} color="#FFFFFF" strokeWidth={2} />
+                  <Text style={styles.uploadTitle}>Добави снимка</Text>
+                  <Text style={styles.uploadSubtitle}>
+                    Натиснете за избор от галерията
+                  </Text>
+                </LinearGradient>
+              </View>
+            </BlurView>
+          </TouchableOpacity>
+
+          {/* Photos Grid */}
+          {formData.photos.length > 0 && (
+            <View style={styles.photosSection}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                Добавени снимки ({formData.photos.length})
+              </Text>
+              <View style={styles.photosGrid}>
+                {formData.photos.map((photo, index) => (
+                  <View key={index} style={styles.photoContainer}>
+                    <Image source={{ uri: photo }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={[styles.removePhotoBtn, { backgroundColor: colors.error }]}
+                      onPress={() => removePhoto(index)}
+                    >
+                      <X size={14} color="#FFFFFF" strokeWidth={2} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Summary Card */}
+          <BlurView
+            intensity={theme === 'light' ? 20 : 40}
+            style={styles.summaryCardBlur}
+          >
+            <View style={[styles.summaryCard, { 
+              backgroundColor: `${colors.surface}90`,
+              borderColor: colors.border,
+            }]}>
+              <View style={styles.summaryHeader}>
+                <LinearGradient
+                  colors={['#10B981', '#34D399']}
+                  style={styles.summaryIcon}
+                >
+                  <Eye size={20} color="#FFFFFF" strokeWidth={2} />
+                </LinearGradient>
+                <Text style={[styles.summaryTitle, { color: colors.text }]}>
+                  Преглед на информацията
+                </Text>
+              </View>
+
+              <View style={styles.summaryContent}>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    Име:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {formData.name || 'Не е въведено'}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    Адрес:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {formData.address || 'Не е въведен'}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    Тип:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {businessTypes.find((t) => t.key === formData.businessType)?.label}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    Цена:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {formData.isPaid ? `${formData.price || '0'} лв` : 'Безплатно'}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+                    Удобства:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {formData.amenities.length} избрани
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </ScrollView>
+    </Animated.View>
   );
 
   const renderStepContent = () => {
@@ -828,7 +1017,7 @@ export default function AddRestroomScreen() {
         intensity={theme === 'light' ? 95 : 85}
         style={styles.bottomNav}
       >
-        <View style={[styles.bottomNavContent, { backgroundColor: colors.surface }]}>
+        <View style={[styles.bottomNavContent, { backgroundColor: `${colors.surface}95` }]}>
           {currentStep > 1 && (
             <TouchableOpacity
               style={[
@@ -955,13 +1144,14 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     width: '100%',
-    height: 4,
-    borderRadius: 2,
+    height: 6,
+    borderRadius: 3,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   progressText: {
     fontSize: 12,
@@ -1019,13 +1209,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     marginBottom: 8,
   },
+  inputBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 16,
-    borderWidth: 1,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1049,20 +1242,36 @@ const styles = StyleSheet.create({
   businessGrid: {
     gap: 16,
   },
-  businessCard: {
+  businessCardWrapper: {
     borderRadius: 20,
-    borderWidth: 2,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
+  businessCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  businessCardGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
   businessCardGradient: {
+    flex: 1,
+    borderRadius: 18,
+  },
+  businessCardContent: {
     padding: 20,
     alignItems: 'center',
     gap: 12,
+    zIndex: 2,
   },
   businessIcon: {
     width: 56,
@@ -1070,6 +1279,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   businessLabel: {
     fontSize: 16,
@@ -1081,6 +1295,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     textAlign: 'center',
     lineHeight: 16,
+  },
+  featureCardBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   featureCard: {
     borderRadius: 20,
@@ -1148,7 +1366,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 16,
-    borderWidth: 2,
     gap: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1162,7 +1379,6 @@ const styles = StyleSheet.create({
   },
   textAreaWrapper: {
     borderRadius: 16,
-    borderWidth: 1,
     padding: 16,
     minHeight: 120,
     shadowColor: '#000',
@@ -1177,16 +1393,23 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlignVertical: 'top',
   },
-  uploadCard: {
+  uploadCardWrapper: {
     borderRadius: 20,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  uploadCardBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  uploadCard: {
+    borderRadius: 20,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
   },
   uploadGradient: {
     alignItems: 'center',
@@ -1237,6 +1460,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 6,
+  },
+  summaryCardBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   summaryCard: {
     borderRadius: 20,
