@@ -27,6 +27,12 @@ interface MapWithBottomSheetProps {
     latitude: number;
     longitude: number;
   };
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
   onRefresh?: () => void;
 }
 
@@ -36,6 +42,7 @@ const INITIAL_DELTA = 0.02;
 export function MapWithBottomSheet({
   restrooms,
   userLocation,
+  initialRegion,
   onRefresh,
 }: MapWithBottomSheetProps) {
   try {
@@ -89,18 +96,14 @@ export function MapWithBottomSheet({
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRestrooms, setFilteredRestrooms] =
       useState<Restroom[]>(restrooms);
-    const [mapRegion, setMapRegion] = useState<Region>({
-      latitude:
-        userLocation && typeof userLocation.latitude === 'number'
-          ? userLocation.latitude
-          : 42.6977,
-      longitude:
-        userLocation && typeof userLocation.longitude === 'number'
-          ? userLocation.longitude
-          : 23.3219,
-      latitudeDelta: INITIAL_DELTA,
-      longitudeDelta: INITIAL_DELTA,
-    });
+    const [mapRegion, setMapRegion] = useState<Region>(
+      initialRegion || {
+        latitude: 42.6977, // Sofia fallback
+        longitude: 23.3219,
+        latitudeDelta: INITIAL_DELTA,
+        longitudeDelta: INITIAL_DELTA,
+      }
+    );
 
     const mapRef = useRef<MapView | null>(null);
 

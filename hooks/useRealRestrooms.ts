@@ -82,19 +82,46 @@ export function useRealRestrooms(): UseRealRestroomsReturn {
    */
   const refreshData = useCallback(async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setError('Location permission denied');
-        return;
-      }
+      // Try to get current location
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        // Web platform
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            await searchNearby(position.coords.latitude, position.coords.longitude);
+          },
+          async (error) => {
+            console.warn('Web geolocation failed:', error);
+            // Fallback to Sofia
+            await searchNearby(42.6977, 23.3219);
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
+        );
+      } else {
+        // Mobile platform
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Location permission denied, using Sofia as fallback');
+          await searchNearby(42.6977, 23.3219);
+          return;
+        }
 
-      const location = await Location.getCurrentPositionAsync({});
-      await searchNearby(location.coords.latitude, location.coords.longitude);
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        await searchNearby(location.coords.latitude, location.coords.longitude);
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to get location';
       setError(errorMessage);
       console.error('❌ Error refreshing data:', err);
+      
+      // Fallback to Sofia if everything fails
+      try {
+        await searchNearby(42.6977, 23.3219);
+      } catch (fallbackError) {
+        console.error('❌ Even fallback search failed:', fallbackError);
+      }
     }
   }, [searchNearby]);
 

@@ -19,6 +19,12 @@ export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
+  const [initialRegion, setInitialRegion] = useState({
+    latitude: 42.6977, // Sofia fallback
+    longitude: 23.3219,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  });
 
   // Get real restroom data from Google Places API
   const {
@@ -89,7 +95,7 @@ export default function MapScreen() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              setLocation({
+              const locationObj = {
                 coords: {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
@@ -100,12 +106,20 @@ export default function MapScreen() {
                   speed: position.coords.speed,
                 },
                 timestamp: position.timestamp,
-              } as Location.LocationObject);
+              } as Location.LocationObject;
+              
+              setLocation(locationObj);
+              setInitialRegion({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              });
             },
             (error) => {
               console.log('Error getting location:', error);
               // Default to Sofia center
-              setLocation({
+              const fallbackLocation = {
                 coords: {
                   latitude: 42.6977,
                   longitude: 23.3219,
@@ -116,13 +130,21 @@ export default function MapScreen() {
                   speed: null,
                 },
                 timestamp: Date.now(),
-              } as Location.LocationObject);
+              } as Location.LocationObject;
+              
+              setLocation(fallbackLocation);
+              setInitialRegion({
+                latitude: 42.6977,
+                longitude: 23.3219,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              });
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
           );
         } else {
           // Fallback to Sofia center
-          setLocation({
+          const fallbackLocation = {
             coords: {
               latitude: 42.6977,
               longitude: 23.3219,
@@ -133,7 +155,9 @@ export default function MapScreen() {
               speed: null,
             },
             timestamp: Date.now(),
-          } as Location.LocationObject);
+          } as Location.LocationObject;
+          
+          setLocation(fallbackLocation);
         }
       } else {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -147,11 +171,17 @@ export default function MapScreen() {
 
         const currentLocation = await Location.getCurrentPositionAsync({});
         setLocation(currentLocation);
+        setInitialRegion({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        });
       }
     } catch (error) {
       console.log('Error getting location:', error);
       // Fallback to Sofia center
-      setLocation({
+      const fallbackLocation = {
         coords: {
           latitude: 42.6977,
           longitude: 23.3219,
@@ -162,7 +192,9 @@ export default function MapScreen() {
           speed: null,
         },
         timestamp: Date.now(),
-      } as Location.LocationObject);
+      } as Location.LocationObject;
+      
+      setLocation(fallbackLocation);
     }
   };
 
@@ -261,6 +293,7 @@ export default function MapScreen() {
               }
             : undefined
         }
+        initialRegion={initialRegion}
         onRefresh={refreshData}
       />
     </View>
