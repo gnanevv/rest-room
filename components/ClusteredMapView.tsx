@@ -493,16 +493,6 @@ export function ClusteredMapView({
         showsIndoors={false}
         rotateEnabled={false}
         pitchEnabled={false}
-        clusterColor={colors.primary}
-        clusterTextColor="#FFFFFF"
-        clusterBorderColor="#FFFFFF"
-        clusterBorderWidth={3}
-        radius={60}
-        maxZoom={16}
-        minZoom={0}
-        minPoints={2}
-        extent={512}
-        nodeSize={64}
       >
         {clusters.map((cluster) => {
           const { properties, geometry } = cluster;
