@@ -11,7 +11,6 @@ import {
   Text,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import SuperCluster from 'react-native-super-cluster';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -78,7 +77,6 @@ export function ClusteredMapView({
   );
 
   const mapRef = useRef<MapView | null>(null);
-  const clusterRef = useRef<SuperCluster | null>(null);
 
   // Animation values for cluster expansion
   const clusterScale = useSharedValue(1);
@@ -122,80 +120,80 @@ export function ClusteredMapView({
     }
   }, [searchQuery, restrooms]);
 
-  // Prepare data for clustering
-  const clusterData = useMemo(() => {
-    return filteredRestrooms
-      .filter(
-        (restroom) =>
-          restroom &&
-          restroom.coordinates &&
-          typeof restroom.coordinates.latitude === 'number' &&
-          typeof restroom.coordinates.longitude === 'number' &&
-          !isNaN(restroom.coordinates.latitude) &&
-          !isNaN(restroom.coordinates.longitude)
-      )
-      .map((restroom) => ({
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [restroom.coordinates.longitude, restroom.coordinates.latitude],
-        },
-        properties: {
-          restroom,
-          id: restroom.id,
-        },
-      }));
-  }, [filteredRestrooms]);
+  // Simple clustering logic based on proximity
+  const clusteredMarkers = useMemo(() => {
+    const validRestrooms = filteredRestrooms.filter(
+      (restroom) =>
+        restroom &&
+        restroom.coordinates &&
+        typeof restroom.coordinates.latitude === 'number' &&
+        typeof restroom.coordinates.longitude === 'number' &&
+        !isNaN(restroom.coordinates.latitude) &&
+        !isNaN(restroom.coordinates.longitude)
+    );
 
-  // Calculate zoom level from region
-  const getZoomLevel = (region: Region) => {
-    const angle = region.longitudeDelta;
-    return Math.round(Math.log(360 / angle) / Math.LN2);
-  };
+    // Simple clustering: group nearby restrooms
+    const clusters: Array<{
+      id: string;
+      coordinate: { latitude: number; longitude: number };
+      restrooms: Restroom[];
+      isCluster: boolean;
+    }> = [];
+    const processed = new Set<string>();
+    const clusterRadius = 0.005; // ~500m
 
-  // Get clusters for current map region
-  const clusters = useMemo(() => {
-    if (!clusterData.length) return [];
+    validRestrooms.forEach((restroom) => {
+      if (processed.has(restroom.id)) return;
 
-    const bbox = [
-      mapRegion.longitude - mapRegion.longitudeDelta / 2,
-      mapRegion.latitude - mapRegion.latitudeDelta / 2,
-      mapRegion.longitude + mapRegion.longitudeDelta / 2,
-      mapRegion.latitude + mapRegion.latitudeDelta / 2,
-    ];
-
-    const zoom = getZoomLevel(mapRegion);
-    
-    try {
-      const superCluster = new SuperCluster({
-        radius: 60,
-        maxZoom: 16,
-        minZoom: 0,
-        minPoints: 2,
+      const nearby = validRestrooms.filter((other) => {
+        if (processed.has(other.id) || other.id === restroom.id) return false;
+        
+        const distance = Math.sqrt(
+          Math.pow(restroom.coordinates.latitude - other.coordinates.latitude, 2) +
+          Math.pow(restroom.coordinates.longitude - other.coordinates.longitude, 2)
+        );
+        
+        return distance < clusterRadius;
       });
 
-      superCluster.load(clusterData);
-      clusterRef.current = superCluster;
+      if (nearby.length > 0) {
+        // Create cluster
+        const allRestrooms = [restroom, ...nearby];
+        const centerLat = allRestrooms.reduce((sum, r) => sum + r.coordinates.latitude, 0) / allRestrooms.length;
+        const centerLng = allRestrooms.reduce((sum, r) => sum + r.coordinates.longitude, 0) / allRestrooms.length;
+        
+        clusters.push({
+          id: `cluster-${restroom.id}`,
+          coordinate: { latitude: centerLat, longitude: centerLng },
+          restrooms: allRestrooms,
+          isCluster: true,
+        });
+        
+        allRestrooms.forEach(r => processed.add(r.id));
+      } else {
+        // Individual marker
+        clusters.push({
+          id: restroom.id,
+          coordinate: restroom.coordinates,
+          restrooms: [restroom],
+          isCluster: false,
+        });
+        processed.add(restroom.id);
+      }
+    });
 
-      return superCluster.getClusters(bbox, zoom);
-    } catch (error) {
-      console.error('Error creating clusters:', error);
-      return [];
-    }
-  }, [clusterData, mapRegion]);
+    return clusters;
+  }, [filteredRestrooms, mapRegion]);
 
   const handleMarkerPress = (restroom: Restroom) => {
     console.log('🎯 Marker pressed:', restroom.name);
     setSelectedRestroom(restroom);
   };
 
-  const handleClusterPress = (clusterId: number, coordinate: { latitude: number; longitude: number }) => {
-    if (!clusterRef.current || !mapRef.current) return;
+  const handleClusterPress = (cluster: any) => {
+    if (!mapRef.current) return;
 
     try {
-      // Get the expansion zoom level
-      const expansionZoom = clusterRef.current.getClusterExpansionZoom(clusterId);
-      
       // Animate cluster expansion
       clusterScale.value = withSpring(1.2, { damping: 15 }, () => {
         clusterScale.value = withSpring(1, { damping: 15 });
@@ -204,8 +202,8 @@ export function ClusteredMapView({
       // Animate to the cluster location with appropriate zoom
       mapRef.current.animateCamera(
         {
-          center: coordinate,
-          zoom: Math.min(expansionZoom + 1, 18),
+          center: cluster.coordinate,
+          zoom: 16,
         },
         { duration: 500 }
       );
@@ -273,11 +271,8 @@ export function ClusteredMapView({
 
   // Cluster marker component
   const ClusterMarker = ({ cluster }: { cluster: any }) => {
-    const pointCount = cluster.properties.point_count;
-    const coordinate = {
-      latitude: cluster.geometry.coordinates[1],
-      longitude: cluster.geometry.coordinates[0],
-    };
+    const pointCount = cluster.restrooms.length;
+    const coordinate = cluster.coordinate;
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: clusterScale.value }],
@@ -311,7 +306,7 @@ export function ClusteredMapView({
     return (
       <Marker
         coordinate={coordinate}
-        onPress={() => handleClusterPress(cluster.properties.cluster_id, coordinate)}
+        onPress={() => handleClusterPress(cluster)}
         anchor={{ x: 0.5, y: 0.5 }}
         tracksViewChanges={false}
       >
@@ -494,24 +489,17 @@ export function ClusteredMapView({
         rotateEnabled={false}
         pitchEnabled={false}
       >
-        {clusters.map((cluster) => {
-          const { properties, geometry } = cluster;
-          const coordinate = {
-            latitude: geometry.coordinates[1],
-            longitude: geometry.coordinates[0],
-          };
-
-          if (properties.cluster) {
-            // This is a cluster
+        {clusteredMarkers.map((cluster) => {
+          if (cluster.isCluster && cluster.restrooms.length > 1) {
             return (
               <ClusterMarker
-                key={`cluster-${properties.cluster_id}`}
+                key={cluster.id}
                 cluster={cluster}
               />
             );
           } else {
             // This is an individual restroom
-            const restroom = properties.restroom as Restroom;
+            const restroom = cluster.restrooms[0];
             return <RestroomMarker key={restroom.id} restroom={restroom} />;
           }
         })}
