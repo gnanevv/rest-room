@@ -9,6 +9,7 @@ config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
   'react-native-maps': require.resolve('react-native-maps/lib/index.js'),
+  'react-native/Libraries/Utilities/codegenNativeCommands': 'react-native-web/dist/cjs/modules/UnimplementedView',
 };
 
 // Handle native-only modules for web
