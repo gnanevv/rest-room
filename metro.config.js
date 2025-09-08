@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
@@ -8,7 +9,7 @@ config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 // Alias problematic native modules for web
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
-  'react-native-maps': require.resolve('react-native-maps/lib/index.js'),
+  'react-native-maps': path.resolve(__dirname, '__mocks__/react-native-maps.js'),
   'react-native/Libraries/Utilities/codegenNativeCommands': 'react-native-web/dist/cjs/modules/UnimplementedView',
 };
 
