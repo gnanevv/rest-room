@@ -6,16 +6,51 @@ import {
   Platform,
   Text,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withRepeat,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 import { MapWithBottomSheet } from '@/components/MapWithBottomSheet';
 import { mockRestrooms } from '@/data/mockData';
 import { Restroom } from '@/types/restroom';
 import { useTheme } from '@/hooks/useTheme';
 import { useRealRestrooms } from '@/hooks/useRealRestrooms';
+import { Sparkles, MapPin, Zap } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 export default function MapScreen() {
   const { colors } = useTheme();
+  const pulseAnimation = useSharedValue(0);
+  const floatAnimation = useSharedValue(0);
+  const shimmerAnimation = useSharedValue(0);
+
+  // Start animations
+  useEffect(() => {
+    pulseAnimation.value = withRepeat(
+      withTiming(1, { duration: 2000 }),
+      -1,
+      true
+    );
+    floatAnimation.value = withRepeat(
+      withTiming(1, { duration: 3000 }),
+      -1,
+      true
+    );
+    shimmerAnimation.value = withRepeat(
+      withTiming(1, { duration: 1500 }),
+      -1,
+      false
+    );
+  }, []);
+
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
@@ -200,64 +235,188 @@ export default function MapScreen() {
 
   // Show loading state while fetching real data
   if (isLoadingReal && restrooms.length === 0) {
+    const pulseStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          scale: interpolate(pulseAnimation.value, [0, 1], [0.95, 1.05]),
+        },
+      ],
+      opacity: interpolate(pulseAnimation.value, [0, 1], [0.7, 1]),
+    }));
+
+    const floatStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          translateY: interpolate(floatAnimation.value, [0, 1], [-10, 10]),
+        },
+      ],
+    }));
+
+    const shimmerStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          translateX: interpolate(
+            shimmerAnimation.value,
+            [0, 1],
+            [-200, 200]
+          ),
+        },
+      ],
+    }));
+
     return (
       <View
         style={[
           styles.container,
+          styles.loadingContainer,
           {
             backgroundColor: colors.background,
-            justifyContent: 'center',
-            alignItems: 'center',
           },
         ]}
       >
-        <Text style={{ color: colors.text, fontSize: 16, marginBottom: 8 }}>
-          🔍 Searching for restrooms...
-        </Text>
-        <Text style={{ color: colors.text, fontSize: 12, opacity: 0.7 }}>
-          This may take a few seconds
-        </Text>
+        <StatusBar
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+          backgroundColor="transparent"
+          translucent
+        />
+        
+        {/* Animated Background */}
+        <LinearGradient
+          colors={
+            theme === 'light'
+              ? ['#667eea', '#764ba2', '#f093fb']
+              : ['#0f0c29', '#302b63', '#24243e']
+          }
+          style={styles.loadingBackground}
+        >
+          {/* Floating particles */}
+          <Animated.View style={[styles.particle, styles.particle1, floatStyle]} />
+          <Animated.View style={[styles.particle, styles.particle2, floatStyle]} />
+          <Animated.View style={[styles.particle, styles.particle3, floatStyle]} />
+        </LinearGradient>
+
+        <BlurView intensity={20} style={styles.loadingContent}>
+          <Animated.View style={[styles.loadingCard, pulseStyle]}>
+            <LinearGradient
+              colors={[`${colors.primary}20`, `${colors.secondary}20`]}
+              style={styles.loadingCardGradient}
+            >
+              <Animated.View style={[styles.iconContainer, floatStyle]}>
+                <LinearGradient
+                  colors={[colors.primary, colors.secondary]}
+                  style={styles.iconGradient}
+                >
+                  <Sparkles size={32} color="#FFFFFF" strokeWidth={2} />
+                </LinearGradient>
+              </Animated.View>
+              
+              <Text style={[styles.loadingTitle, { color: colors.text }]}>
+                Discovering Amazing Places
+              </Text>
+              
+              <Text style={[styles.loadingSubtitle, { color: colors.textSecondary }]}>
+                Finding the best restrooms near you...
+              </Text>
+              
+              {/* Shimmer effect */}
+              <View style={styles.shimmerContainer}>
+                <Animated.View
+                  style={[
+                    styles.shimmer,
+                    { backgroundColor: `${colors.primary}30` },
+                    shimmerStyle,
+                  ]}
+                />
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        </BlurView>
       </View>
     );
   }
 
   // Show error state if real data failed to load
   if (realDataError && restrooms.length === 0) {
+    const shakeAnimation = useSharedValue(0);
+    
+    const shakeStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          translateX: interpolate(
+            shakeAnimation.value,
+            [0, 0.25, 0.5, 0.75, 1],
+            [0, -10, 10, -10, 0]
+          ),
+        },
+      ],
+    }));
+
+    const handleRetry = () => {
+      shakeAnimation.value = withTiming(1, { duration: 500 }, () => {
+        shakeAnimation.value = 0;
+      });
+      refreshData();
+    };
+
     return (
       <View
         style={[
           styles.container,
+          styles.errorContainer,
           {
             backgroundColor: colors.background,
-            justifyContent: 'center',
-            alignItems: 'center',
           },
         ]}
       >
-        <Text style={{ color: colors.text, fontSize: 16, marginBottom: 8 }}>
-          ❌ Failed to load restrooms
-        </Text>
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 12,
-            opacity: 0.7,
-            marginBottom: 16,
-          }}
-        >
-          {realDataError}
-        </Text>
-        <TouchableOpacity
-          style={{
-            backgroundColor: colors.primary,
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            borderRadius: 8,
-          }}
-          onPress={refreshData}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Try Again</Text>
-        </TouchableOpacity>
+        <StatusBar
+          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+          backgroundColor="transparent"
+          translucent
+        />
+        
+        <LinearGradient
+          colors={
+            theme === 'light'
+              ? ['#ff9a9e', '#fecfef', '#fecfef']
+              : ['#2d1b69', '#11998e', '#38ef7d']
+          }
+          style={styles.errorBackground}
+        />
+
+        <BlurView intensity={30} style={styles.errorContent}>
+          <Animated.View style={[styles.errorCard, shakeStyle]}>
+            <LinearGradient
+              colors={[`${colors.error}15`, `${colors.warning}15`]}
+              style={styles.errorCardGradient}
+            >
+              <View style={[styles.errorIconContainer, { backgroundColor: colors.error }]}>
+                <Zap size={28} color="#FFFFFF" strokeWidth={2.5} />
+              </View>
+              
+              <Text style={[styles.errorTitle, { color: colors.text }]}>
+                Oops! Something went wrong
+              </Text>
+              
+              <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+                We couldn't load the restroom data. Don't worry, we'll get it sorted!
+              </Text>
+              
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={handleRetry}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.retryGradient}
+                >
+                  <Text style={styles.retryText}>Try Again</Text>
+                  <Sparkles size={18} color="#FFFFFF" strokeWidth={2} />
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </Animated.View>
+        </BlurView>
       </View>
     );
   }
@@ -303,5 +462,176 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  particle: {
+    position: 'absolute',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  particle1: {
+    top: '20%',
+    left: '10%',
+  },
+  particle2: {
+    top: '60%',
+    right: '15%',
+  },
+  particle3: {
+    top: '80%',
+    left: '70%',
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  loadingCardGradient: {
+    paddingHorizontal: 40,
+    paddingVertical: 50,
+    alignItems: 'center',
+    borderRadius: 24,
+  },
+  iconContainer: {
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  iconGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingTitle: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  loadingSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  shimmerContainer: {
+    width: 200,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  shimmer: {
+    width: 100,
+    height: '100%',
+    borderRadius: 2,
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  errorContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  errorCardGradient: {
+    paddingHorizontal: 40,
+    paddingVertical: 50,
+    alignItems: 'center',
+    borderRadius: 24,
+  },
+  errorIconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  errorTitle: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  errorMessage: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  retryButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  retryGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  retryText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
   },
 });

@@ -5,12 +5,22 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import BottomSheet, {
   BottomSheetView,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, Star, Euro, Accessibility, Navigation2, X, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Circle as XCircle, Building, Coffee, Utensils, ShoppingBag, Fuel } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
+import { MapPin, Star, Euro, Accessibility, Navigation2, X, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Circle as XCircle, Building, Coffee, Utensils, ShoppingBag, Fuel, Heart, Share, Clock, Users, Camera, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Restroom } from '@/types/restroom';
 
@@ -27,17 +37,23 @@ export function RestroomBottomSheet({
 }: RestroomBottomSheetProps) {
   const { colors, theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const scaleAnimation = useSharedValue(0);
+  const slideAnimation = useSharedValue(0);
 
   // Snap points for the bottom sheet
-  const snapPoints = useMemo(() => ['35%', '60%'], []);
+  const snapPoints = useMemo(() => ['40%', '75%'], []);
 
   useEffect(() => {
     if (restroom) {
       bottomSheetRef.current?.snapToIndex(0);
+      scaleAnimation.value = withSpring(1, { damping: 15, stiffness: 200 });
+      slideAnimation.value = withTiming(1, { duration: 300 });
     } else {
       bottomSheetRef.current?.close();
+      scaleAnimation.value = withTiming(0, { duration: 200 });
+      slideAnimation.value = withTiming(0, { duration: 200 });
     }
-  }, [restroom]);
+  }, [restroom, scaleAnimation, slideAnimation]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
@@ -89,6 +105,11 @@ export function RestroomBottomSheet({
   const statusInfo = getStatusInfo();
   const businessInfo = getBusinessTypeInfo();
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleAnimation.value }],
+    opacity: slideAnimation.value,
+  }));
+
   return (
     <BottomSheet
       ref={bottomSheetRef}
@@ -99,35 +120,40 @@ export function RestroomBottomSheet({
       enablePanDownToClose
       backgroundStyle={{
         backgroundColor: colors.surface,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
       }}
       handleIndicatorStyle={{
         backgroundColor: colors.border,
-        width: 48,
-        height: 5,
+        width: 60,
+        height: 6,
+        borderRadius: 3,
       }}
     >
-      <BottomSheetView style={styles.container}>
-        <View style={[styles.content, { backgroundColor: colors.surface }]}>
+      <BottomSheetScrollView style={styles.container}>
+        <Animated.View style={[styles.content, { backgroundColor: colors.surface }, animatedStyle]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <LinearGradient
-                colors={[statusInfo.color, `${statusInfo.color}CC`]}
-                style={styles.statusIndicator}
-              >
-                <statusInfo.icon
-                  size={18}
-                  color="#FFFFFF"
-                  strokeWidth={2.5}
-                />
-              </LinearGradient>
+              <BlurView intensity={20} style={styles.statusIndicatorBlur}>
+                <LinearGradient
+                  colors={[statusInfo.color, `${statusInfo.color}CC`]}
+                  style={styles.statusIndicator}
+                >
+                  <statusInfo.icon
+                    size={20}
+                    color="#FFFFFF"
+                    strokeWidth={2.5}
+                  />
+                </LinearGradient>
+              </BlurView>
               <View style={styles.headerText}>
                 <Text style={[styles.title, { color: colors.text }]}>
                   {restroom.name}
                 </Text>
                 <View style={styles.addressRow}>
                   <MapPin
-                    size={14}
+                    size={16}
                     color={colors.textSecondary}
                     strokeWidth={2}
                   />
@@ -142,129 +168,210 @@ export function RestroomBottomSheet({
             <TouchableOpacity
               style={[
                 styles.closeButton,
-                { backgroundColor: colors.background },
+                { backgroundColor: `${colors.background}95` },
               ]}
               onPress={onClose}
+              activeOpacity={0.8}
             >
-              <X size={18} color={colors.textSecondary} strokeWidth={2} />
+              <X size={20} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           </View>
 
-          {/* Quick Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Star
-                size={16}
-                color={colors.warning}
-                fill={colors.warning}
-                strokeWidth={2}
-              />
-              <Text style={[styles.statText, { color: colors.text }]}>
-                {restroom.rating.toFixed(1)}
-              </Text>
-            </View>
-            
-            <View style={styles.statItem}>
-              <businessInfo.icon
-                size={16}
-                color={colors.primary}
-                strokeWidth={2}
-              />
-              <Text style={[styles.statText, { color: colors.text }]}>
-                {businessInfo.text}
-              </Text>
-            </View>
-            
+          {/* Enhanced Stats Cards */}
+          <View style={styles.statsContainer}>
+            <BlurView intensity={15} style={styles.statCard}>
+              <View style={[styles.statCardContent, { backgroundColor: `${colors.surface}90` }]}>
+                <LinearGradient
+                  colors={[colors.warning, `${colors.warning}CC`]}
+                  style={styles.statIcon}
+                >
+                  <Star size={18} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+                </LinearGradient>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {restroom.rating.toFixed(1)}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Rating
+                </Text>
+              </View>
+            </BlurView>
+
+            <BlurView intensity={15} style={styles.statCard}>
+              <View style={[styles.statCardContent, { backgroundColor: `${colors.surface}90` }]}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.statIcon}
+                >
+                  <businessInfo.icon size={18} color="#FFFFFF" strokeWidth={2} />
+                </LinearGradient>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {businessInfo.text}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Type
+                </Text>
+              </View>
+            </BlurView>
+
             {restroom.distance && (
-              <View style={styles.statItem}>
-                <Navigation2
-                  size={16}
-                  color={colors.textSecondary}
-                  strokeWidth={2}
-                />
-                <Text style={[styles.statText, { color: colors.text }]}>
-                  {restroom.distance.toFixed(1)} км
-                </Text>
-              </View>
+              <BlurView intensity={15} style={styles.statCard}>
+                <View style={[styles.statCardContent, { backgroundColor: `${colors.surface}90` }]}>
+                  <LinearGradient
+                    colors={[colors.secondary, `${colors.secondary}CC`]}
+                    style={styles.statIcon}
+                  >
+                    <Navigation2 size={18} color="#FFFFFF" strokeWidth={2} />
+                  </LinearGradient>
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {restroom.distance.toFixed(1)}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                    km away
+                  </Text>
+                </View>
+              </BlurView>
             )}
           </View>
 
-          {/* Key Features */}
-          <View style={styles.featuresRow}>
-            {restroom.isPaid && (
-              <View style={[styles.featureBadge, { backgroundColor: colors.background }]}>
-                <Euro size={14} color={colors.warning} strokeWidth={2} />
-                <Text style={[styles.featureText, { color: colors.warning }]}>
-                  {typeof restroom.price === 'number'
-                    ? restroom.price.toFixed(2)
-                    : '0.00'} лв
-                </Text>
-              </View>
-            )}
-            
-            {restroom.accessibility && (
-              <View style={[styles.featureBadge, { backgroundColor: colors.background }]}>
-                <Accessibility size={14} color={colors.success} strokeWidth={2} />
-                <Text style={[styles.featureText, { color: colors.success }]}>
-                  Достъпно
-                </Text>
-              </View>
-            )}
-            
-            {!restroom.isPaid && (
-              <View style={[styles.featureBadge, { backgroundColor: colors.background }]}>
-                <CheckCircle size={14} color={colors.success} strokeWidth={2} />
-                <Text style={[styles.featureText, { color: colors.success }]}>
-                  Безплатно
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Cleanliness */}
-          <View style={styles.cleanlinessSection}>
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-              Чистота
+          {/* Enhanced Features Section */}
+          <View style={styles.featuresSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Features & Amenities
             </Text>
-            <View style={styles.cleanlinessRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={18}
-                  color={
-                    star <= restroom.cleanliness
-                      ? colors.warning
-                      : colors.border
-                  }
-                  fill={
-                    star <= restroom.cleanliness
-                      ? colors.warning
-                      : 'transparent'
-                  }
-                  strokeWidth={2}
-                />
-              ))}
-              <Text style={[styles.cleanlinessText, { color: colors.text }]}>
-                {restroom.cleanliness}/5
-              </Text>
+            <View style={styles.featuresGrid}>
+              {restroom.isPaid && (
+                <BlurView intensity={10} style={styles.featureCard}>
+                  <View style={[styles.featureCardContent, { backgroundColor: `${colors.warning}15` }]}>
+                    <Euro size={16} color={colors.warning} strokeWidth={2} />
+                    <Text style={[styles.featureText, { color: colors.warning }]}>
+                      {typeof restroom.price === 'number'
+                        ? `${restroom.price.toFixed(2)} лв`
+                        : 'Paid'}
+                    </Text>
+                  </View>
+                </BlurView>
+              )}
+              
+              {restroom.accessibility && (
+                <BlurView intensity={10} style={styles.featureCard}>
+                  <View style={[styles.featureCardContent, { backgroundColor: `${colors.success}15` }]}>
+                    <Accessibility size={16} color={colors.success} strokeWidth={2} />
+                    <Text style={[styles.featureText, { color: colors.success }]}>
+                      Accessible
+                    </Text>
+                  </View>
+                </BlurView>
+              )}
+              
+              {!restroom.isPaid && (
+                <BlurView intensity={10} style={styles.featureCard}>
+                  <View style={[styles.featureCardContent, { backgroundColor: `${colors.success}15` }]}>
+                    <CheckCircle size={16} color={colors.success} strokeWidth={2} />
+                    <Text style={[styles.featureText, { color: colors.success }]}>
+                      Free
+                    </Text>
+                  </View>
+                </BlurView>
+              )}
+
+              {restroom.photos.length > 0 && (
+                <BlurView intensity={10} style={styles.featureCard}>
+                  <View style={[styles.featureCardContent, { backgroundColor: `${colors.info}15` }]}>
+                    <Camera size={16} color={colors.info} strokeWidth={2} />
+                    <Text style={[styles.featureText, { color: colors.info }]}>
+                      {restroom.photos.length} Photos
+                    </Text>
+                  </View>
+                </BlurView>
+              )}
+
+              <View style={styles.statItem}>
+                <BlurView intensity={10} style={styles.featureCard}>
+                  <View style={[styles.featureCardContent, { backgroundColor: `${colors.textSecondary}15` }]}>
+                    <Users size={16} color={colors.textSecondary} strokeWidth={2} />
+                    <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                      {restroom.checkInCount} visits
+                    </Text>
+                  </View>
+                </BlurView>
+              </View>
             </View>
           </View>
 
-          {/* Action Button */}
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onNavigate(restroom)}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              style={styles.actionGradient}
+          {/* Enhanced Cleanliness Section */}
+          <View style={styles.cleanlinessSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Cleanliness Rating
+            </Text>
+            <BlurView intensity={15} style={styles.cleanlinessCard}>
+              <View style={[styles.cleanlinessCardContent, { backgroundColor: `${colors.surface}90` }]}>
+                <View style={styles.cleanlinessRow}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={24}
+                      color={
+                        star <= restroom.cleanliness
+                          ? colors.warning
+                          : colors.border
+                      }
+                      fill={
+                        star <= restroom.cleanliness
+                          ? colors.warning
+                          : 'transparent'
+                      }
+                      strokeWidth={2}
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.cleanlinessText, { color: colors.text }]}>
+                  {restroom.cleanliness}/5 - {restroom.cleanliness >= 4 ? 'Excellent' : restroom.cleanliness >= 3 ? 'Good' : 'Fair'}
+                </Text>
+              </View>
+            </BlurView>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionSection}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              activeOpacity={0.8}
             >
-              <Navigation2 size={20} color="#FFFFFF" strokeWidth={2} />
-              <Text style={styles.actionText}>Навигация</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </BottomSheetView>
+              <BlurView intensity={20} style={styles.secondaryButtonBlur}>
+                <View style={[styles.secondaryButtonContent, { backgroundColor: `${colors.surface}95` }]}>
+                  <Heart size={20} color={colors.error} strokeWidth={2} />
+                </View>
+              </BlurView>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => onNavigate(restroom)}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.primaryButtonGradient}
+              >
+                <Navigation2 size={22} color="#FFFFFF" strokeWidth={2.5} />
+                <Text style={styles.primaryButtonText}>Get Directions</Text>
+                <Sparkles size={18} color="#FFFFFF" strokeWidth={2} />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              activeOpacity={0.8}
+            >
+              <BlurView intensity={20} style={styles.secondaryButtonBlur}>
+                <View style={[styles.secondaryButtonContent, { backgroundColor: `${colors.surface}95` }]}>
+                  <Share size={20} color={colors.primary} strokeWidth={2} />
+                </View>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 }
@@ -274,130 +381,207 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 24,
+    paddingTop: 8,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 12,
+    gap: 16,
+  },
+  statusIndicatorBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   statusIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 12,
+    elevation: 12,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: 28,
   },
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   address: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Inter-Regular',
     flex: 1,
+    lineHeight: 20,
   },
   closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  statCardContent: {
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    borderRadius: 16,
+    gap: 8,
+  },
+  statIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 4,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-    paddingVertical: 12,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statText: {
-    fontSize: 14,
+  statValue: {
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
   },
-  featuresRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  statLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  featuresSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
     marginBottom: 16,
   },
-  featureBadge: {
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  featureCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  featureCardContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
     gap: 6,
   },
   featureText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Inter-SemiBold',
   },
   cleanlinessSection: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
-  sectionLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    marginBottom: 8,
+  cleanlinessCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cleanlinessCardContent: {
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
   },
   cleanlinessRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    gap: 8,
+    marginBottom: 12,
   },
   cleanlinessText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    marginLeft: 8,
+    fontFamily: 'Inter-Medium',
+    textAlign: 'center',
   },
-  actionButton: {
+  actionSection: {
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'center',
+  },
+  secondaryButton: {
+    width: 56,
+    height: 56,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  actionGradient: {
+  secondaryButtonBlur: {
+    flex: 1,
+    borderRadius: 16,
+  },
+  secondaryButtonContent: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 16,
+  },
+  primaryButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    gap: 12,
     borderRadius: 16,
   },
-  actionText: {
-    fontSize: 16,
+  primaryButtonText: {
+    fontSize: 17,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
+    flex: 1,
+    textAlign: 'center',
   },
 });
