@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Formik } from 'formik';
 import * as Location from 'expo-location';
-import { Plus, MapPin, CheckCircle } from 'lucide-react-native';
+import { Plus, MapPin, CircleCheck as CheckCircle } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
