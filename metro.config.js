@@ -10,14 +10,14 @@ config.resolver.platforms = ['web', 'ios', 'android', 'native'];
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
   'react-native-maps': path.resolve(__dirname, '__mocks__/react-native-maps.js'),
-  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/UnimplementedView.js'),
+  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js'),
 };
 
 // Enhanced extraNodeModules configuration
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules || {}),
   'react-native-maps': path.resolve(__dirname, '__mocks__/react-native-maps.js'),
-  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/UnimplementedView.js'),
+  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js'),
 };
 
 // Enhanced resolver configuration for web
