@@ -84,7 +84,12 @@ export default function MapScreen() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     getCurrentLocation();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Combine mock and real data when either changes
@@ -130,6 +135,8 @@ export default function MapScreen() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
+              if (!isMounted) return;
+              
               const locationObj = {
                 coords: {
                   latitude: position.coords.latitude,
@@ -152,6 +159,8 @@ export default function MapScreen() {
               });
             },
             (error) => {
+              if (!isMounted) return;
+              
               console.log('Error getting location:', error);
               // Default to Sofia center
               const fallbackLocation = {
@@ -178,6 +187,8 @@ export default function MapScreen() {
             { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
           );
         } else {
+          if (!isMounted) return;
+          
           // Fallback to Sofia center
           const fallbackLocation = {
             coords: {
@@ -204,6 +215,8 @@ export default function MapScreen() {
           return;
         }
 
+        if (!isMounted) return;
+        
         const currentLocation = await Location.getCurrentPositionAsync({});
         setLocation(currentLocation);
         setInitialRegion({
@@ -214,6 +227,8 @@ export default function MapScreen() {
         });
       }
     } catch (error) {
+      if (!isMounted) return;
+      
       console.log('Error getting location:', error);
       // Fallback to Sofia center
       const fallbackLocation = {

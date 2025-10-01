@@ -15,7 +15,12 @@ export default function ListScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     getCurrentLocation();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const getCurrentLocation = async () => {
@@ -26,6 +31,8 @@ export default function ListScreen() {
         return;
       }
 
+      if (!isMounted) return;
+      
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
     } catch (error) {
