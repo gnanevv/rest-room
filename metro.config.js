@@ -11,14 +11,16 @@ config.resolver.alias = {
   ...(config.resolver.alias || {}),
   'react-native': 'react-native-web',
   'react-native-maps': path.resolve(__dirname, '__mocks__/react-native-maps.js'),
-  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js')
+  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js'),
+  'react-native/Libraries/ReactNative/UIManager': path.resolve(__dirname, '__mocks__/react-native-web-uimanager.js')
 };
 
 // Enhanced extraNodeModules configuration
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules || {}),
   'react-native-maps': path.resolve(__dirname, '__mocks__/react-native-maps.js'),
-  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js')
+  'react-native/Libraries/Utilities/codegenNativeCommands': path.resolve(__dirname, '__mocks__/codegenNativeCommands.js'),
+  'react-native/Libraries/ReactNative/UIManager': path.resolve(__dirname, '__mocks__/react-native-web-uimanager.js')
 };
 
 // Add custom resolver to intercept native module imports

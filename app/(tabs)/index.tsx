@@ -130,6 +130,8 @@ export default function MapScreen() {
   }, [mockRestrooms, realRestrooms]);
 
   const getCurrentLocation = async () => {
+    let isMounted = true;
+    
     try {
       if (Platform.OS === 'web') {
         if (navigator.geolocation) {
