@@ -18,6 +18,8 @@ const Animated = {
   FlatList: createAnimatedComponent(require('react-native').FlatList),
   Image: createAnimatedComponent(require('react-native').Image),
   createAnimatedComponent,
+  addWhitelistedUIProps,
+  addWhitelistedNativeProps,
 };
 
 // Mock hooks
@@ -112,6 +114,15 @@ const runOnUI = (fn) => {
       console.warn('runOnUI error:', error);
     }
   };
+};
+
+// Mock UI property registration functions
+const addWhitelistedUIProps = (props) => {
+  // No-op for web compatibility
+};
+
+const addWhitelistedNativeProps = (props) => {
+  // No-op for web compatibility
 };
 
 // Mock interpolation functions
