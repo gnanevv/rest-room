@@ -58,4 +58,7 @@ const UIManager = {
   },
 };
 
+// Export as both default and named export for maximum compatibility
 module.exports = UIManager;
+module.exports.default = UIManager;
+module.exports.UIManager = UIManager;
