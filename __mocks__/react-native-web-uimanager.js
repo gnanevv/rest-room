@@ -1,64 +1,64 @@
-// Mock UIManager for web compatibility
+// Web-compatible UIManager mock
 const UIManager = {
-  hasViewManagerConfig: (name) => {
-    // Return false for all view manager configs on web
-    // This prevents native-only components from trying to render
-    return false;
-  },
-  getViewManagerConfig: (name) => {
-    return null;
-  },
-  dispatchViewManagerCommand: () => {
-    // No-op for web
-  },
-  measure: () => {
-    // No-op for web
-  },
-  measureInWindow: () => {
-    // No-op for web
-  },
-  measureLayout: () => {
-    // No-op for web
-  },
-  measureLayoutRelativeToParent: () => {
-    // No-op for web
-  },
-  setJSResponder: () => {
-    // No-op for web
-  },
-  clearJSResponder: () => {
-    // No-op for web
-  },
-  configureNextLayoutAnimation: () => {
-    // No-op for web
-  },
-  removeSubviewsFromContainerWithID: () => {
-    // No-op for web
-  },
-  replaceExistingNonRootView: () => {
-    // No-op for web
-  },
-  setChildren: () => {
-    // No-op for web
-  },
-  manageChildren: () => {
-    // No-op for web
-  },
-  blur: () => {
-    // No-op for web
-  },
-  focus: () => {
-    // No-op for web
-  },
-  showPopupMenu: () => {
-    // No-op for web
-  },
-  dismissPopupMenu: () => {
-    // No-op for web
-  },
+  // View manager methods
+  hasViewManagerConfig: () => false,
+  getViewManagerConfig: () => ({}),
+  getConstants: () => ({}),
+  
+  // Measurement methods
+  measure: () => {},
+  measureInWindow: () => {},
+  measureLayout: () => {},
+  measureLayoutRelativeToParent: () => {},
+  
+  // Focus methods
+  focus: () => {},
+  blur: () => {},
+  
+  // Animation methods
+  setJSResponder: () => {},
+  clearJSResponder: () => {},
+  
+  // Layout methods
+  updateView: () => {},
+  manageChildren: () => {},
+  
+  // Constants
+  getConstantsForViewManager: () => ({}),
+  
+  // Accessibility
+  sendAccessibilityEvent: () => {},
+  announceForAccessibility: () => {},
+  
+  // Platform-specific methods (no-ops for web)
+  dispatchViewManagerCommand: () => {},
+  showPopupMenu: () => {},
+  dismissPopupMenu: () => {},
+  
+  // Additional methods that might be called
+  createView: () => {},
+  removeSubviewsFromContainerWithID: () => {},
+  replaceExistingNonRootView: () => {},
+  setChildren: () => {},
+  
+  // React Native Web compatibility
+  __getViewConfig: () => ({}),
+  __hasViewConfig: () => false,
 };
 
-// Export as both default and named export for maximum compatibility
+// Export in multiple formats for maximum compatibility
 module.exports = UIManager;
 module.exports.default = UIManager;
 module.exports.UIManager = UIManager;
+
+// Also export as ES module for modern bundlers
+if (typeof exports === 'object' && typeof module !== 'undefined') {
+  module.exports = UIManager;
+} else if (typeof define === 'function' && define.amd) {
+  define(function() { return UIManager; });
+} else {
+  (typeof globalThis !== 'undefined' ? globalThis : 
+   typeof window !== 'undefined' ? window : 
+   typeof global !== 'undefined' ? global : 
+   typeof self !== 'undefined' ? self : this).UIManager = UIManager;
+}
