@@ -38,6 +38,13 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     };
   }
   
+  if (platform === 'web' && moduleName === 'react-native/Libraries/ReactNative/UIManager') {
+    return {
+      filePath: path.resolve(__dirname, '__mocks__/react-native-web-uimanager.js'),
+      type: 'sourceFile'
+    };
+  }
+  
   if (originalResolveRequest) {
     return originalResolveRequest(context, moduleName, platform);
   }

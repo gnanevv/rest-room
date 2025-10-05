@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Restroom } from '@/types/restroom';
 import { placesService } from '@/lib/placesService';
 import * as Location from 'expo-location';
@@ -19,12 +19,22 @@ export function useRealRestrooms(): UseRealRestroomsReturn {
   const [realRestrooms, setRealRestrooms] = useState<Restroom[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   /**
    * Search for restrooms near a specific location
    */
   const searchNearby = useCallback(
     async (latitude: number, longitude: number, radius: number = 5000) => {
+      if (!isMountedRef.current) return;
+      
       setIsLoading(true);
       setError(null);
 
@@ -63,15 +73,21 @@ export function useRealRestrooms(): UseRealRestroomsReturn {
           (a, b) => a.distance - b.distance
         );
 
-        setRealRestrooms(sortedRestrooms);
+        if (isMountedRef.current) {
+          setRealRestrooms(sortedRestrooms);
+        }
         console.log(`✅ Found ${sortedRestrooms.length} restrooms`);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Unknown error occurred';
-        setError(errorMessage);
+        if (isMountedRef.current) {
+          setError(errorMessage);
+        }
         console.error('❌ Error searching for restrooms:', err);
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     []

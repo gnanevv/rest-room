@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -31,6 +31,7 @@ export default function MapScreen() {
   const pulseAnimation = useSharedValue(0);
   const floatAnimation = useSharedValue(0);
   const shimmerAnimation = useSharedValue(0);
+  const isMountedRef = useRef(true);
 
   // Start animations
   useEffect(() => {
@@ -84,11 +85,11 @@ export default function MapScreen() {
   });
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     getCurrentLocation();
     
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -129,15 +130,13 @@ export default function MapScreen() {
     }
   }, [mockRestrooms, realRestrooms]);
 
-  const getCurrentLocation = async () => {
-    let isMounted = true;
-    
+  const getCurrentLocation = useCallback(async () => {
     try {
       if (Platform.OS === 'web') {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              if (!isMounted) return;
+              if (!isMountedRef.current) return;
               
               const locationObj = {
                 coords: {
@@ -161,7 +160,7 @@ export default function MapScreen() {
               });
             },
             (error) => {
-              if (!isMounted) return;
+              if (!isMountedRef.current) return;
               
               console.log('Error getting location:', error);
               // Default to Sofia center
@@ -189,7 +188,7 @@ export default function MapScreen() {
             { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
           );
         } else {
-          if (!isMounted) return;
+          if (!isMountedRef.current) return;
           
           // Fallback to Sofia center
           const fallbackLocation = {
@@ -217,7 +216,7 @@ export default function MapScreen() {
           return;
         }
 
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         
         const currentLocation = await Location.getCurrentPositionAsync({});
         setLocation(currentLocation);
@@ -229,7 +228,7 @@ export default function MapScreen() {
         });
       }
     } catch (error) {
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
       
       console.log('Error getting location:', error);
       // Fallback to Sofia center
@@ -248,7 +247,7 @@ export default function MapScreen() {
       
       setLocation(fallbackLocation);
     }
-  };
+  }, []);
 
   // Show loading state while fetching real data
   if (isLoadingReal && restrooms.length === 0) {

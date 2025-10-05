@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SearchHeader } from '@/components/SearchHeader';
 import { FilterBar } from '@/components/FilterBar';
@@ -13,17 +13,18 @@ export default function ListScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredRestrooms, setFilteredRestrooms] = useState<Restroom[]>(mockRestrooms);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     getCurrentLocation();
     
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, []);
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocation = useCallback(async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -31,14 +32,14 @@ export default function ListScreen() {
         return;
       }
 
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
       
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
     } catch (error) {
       console.log('Error getting location:', error);
     }
-  };
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
