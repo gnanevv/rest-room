@@ -125,6 +125,7 @@ const addWhitelistedNativeProps = (props) => {
   // No-op for web compatibility
 };
 
+// Mock Animated components
 // Mock interpolation functions
 const interpolate = (value, inputRange, outputRange, extrapolate) => {
   if (typeof value !== 'number') return outputRange[0] || 0;
