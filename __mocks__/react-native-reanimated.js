@@ -4,6 +4,15 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 
+// Mock UI property registration functions - declared first to avoid hoisting issues
+function addWhitelistedUIProps(props) {
+  // No-op for web compatibility
+}
+
+function addWhitelistedNativeProps(props) {
+  // No-op for web compatibility
+}
+
 // Mock Animated components
 const createAnimatedComponent = (Component) => {
   return React.forwardRef((props, ref) => {
@@ -116,16 +125,6 @@ const runOnUI = (fn) => {
   };
 };
 
-// Mock UI property registration functions
-const addWhitelistedUIProps = (props) => {
-  // No-op for web compatibility
-};
-
-const addWhitelistedNativeProps = (props) => {
-  // No-op for web compatibility
-};
-
-// Mock Animated components
 // Mock interpolation functions
 const interpolate = (value, inputRange, outputRange, extrapolate) => {
   if (typeof value !== 'number') return outputRange[0] || 0;
@@ -363,4 +362,6 @@ export {
   FadeOutUp,
   FadeOutDown,
   Easing,
+  addWhitelistedUIProps,
+  addWhitelistedNativeProps,
 };
