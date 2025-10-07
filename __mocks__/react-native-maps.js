@@ -3,9 +3,25 @@ import { View, Text } from 'react-native';
 
 // Mock MapView component for web
 export const MapView = React.forwardRef((props, ref) => {
+  // Add camera methods to the ref
+  React.useImperativeHandle(ref, () => ({
+    getCamera: () => Promise.resolve({
+      center: { latitude: 0, longitude: 0 },
+      pitch: 0,
+      heading: 0,
+      zoom: 10,
+      altitude: 1000
+    }),
+    animateCamera: (camera, duration) => Promise.resolve(),
+    setCamera: (camera) => Promise.resolve(),
+    animateToRegion: (region, duration) => Promise.resolve(),
+    fitToElements: (animated) => Promise.resolve(),
+    fitToSuppliedMarkers: (markers, animated) => Promise.resolve(),
+    fitToCoordinates: (coordinates, options) => Promise.resolve()
+  }), []);
+
   return (
     <View
-      ref={ref}
       style={[
         {
           flex: 1,
