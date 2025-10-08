@@ -291,11 +291,11 @@ export default function MapScreen() {
         ]}
       >
         <StatusBar
-          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+          barStyle={colors.statusBarStyle}
           backgroundColor="transparent"
           translucent
         />
-        
+
         {/* Animated Background */}
         <LinearGradient
           colors={
@@ -385,11 +385,11 @@ export default function MapScreen() {
         ]}
       >
         <StatusBar
-          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+          barStyle={colors.statusBarStyle}
           backgroundColor="transparent"
           translucent
         />
-        
+
         <LinearGradient
           colors={
             theme === 'light'

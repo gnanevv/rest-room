@@ -31,6 +31,7 @@ const lightColors = {
   cardBackground: '#FFFFFF',
   cardShadow: 'rgba(0, 0, 0, 0.1)',
   overlay: 'rgba(0, 0, 0, 0.5)',
+  statusBarStyle: 'dark-content' as 'dark-content' | 'light-content',
 };
 
 const darkColors = {
@@ -55,6 +56,7 @@ const darkColors = {
   cardBackground: '#1A1A1D',
   cardShadow: 'rgba(0, 0, 0, 0.5)',
   overlay: 'rgba(0, 0, 0, 0.8)',
+  statusBarStyle: 'light-content' as 'dark-content' | 'light-content',
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
