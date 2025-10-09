@@ -8,7 +8,9 @@ import {
   Animated,
   ScrollView,
   Dimensions,
+  Platform,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { Search, X, MapPin, Star, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,8 +47,11 @@ export function AnimatedSearchBar({
     .slice(0, 5);
 
   const expandSearch = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setIsExpanded(true);
-    
+
     Animated.parallel([
       Animated.spring(animatedWidth, {
         toValue: width - 40,
@@ -63,9 +68,12 @@ export function AnimatedSearchBar({
   };
 
   const collapseSearch = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setIsExpanded(false);
     onSearchChange('');
-    
+
     Animated.parallel([
       Animated.spring(animatedWidth, {
         toValue: 52,
@@ -82,6 +90,9 @@ export function AnimatedSearchBar({
   };
 
   const handleSuggestionPress = (restroom: Restroom) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     onSuggestionPress(restroom);
     // Auto-collapse when selecting suggestion
     collapseSearch();

@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Dimensions,
   ScrollView,
+  Platform,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import BottomSheet, {
   BottomSheetView,
   BottomSheetScrollView,
@@ -336,6 +338,11 @@ export function RestroomBottomSheet({
             <TouchableOpacity
               style={styles.secondaryButton}
               activeOpacity={0.8}
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }}
             >
               <BlurView intensity={20} style={styles.secondaryButtonBlur}>
                 <View style={[styles.secondaryButtonContent, { backgroundColor: `${colors.surface}95` }]}>
@@ -346,7 +353,12 @@ export function RestroomBottomSheet({
 
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => onNavigate(restroom)}
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+                onNavigate(restroom);
+              }}
               activeOpacity={0.8}
             >
               <LinearGradient
@@ -362,6 +374,11 @@ export function RestroomBottomSheet({
             <TouchableOpacity
               style={styles.secondaryButton}
               activeOpacity={0.8}
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }}
             >
               <BlurView intensity={20} style={styles.secondaryButtonBlur}>
                 <View style={[styles.secondaryButtonContent, { backgroundColor: `${colors.surface}95` }]}>

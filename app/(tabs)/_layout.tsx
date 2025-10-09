@@ -1,10 +1,17 @@
 import { Tabs } from 'expo-router';
 import { MapPin, List as ListIcon, Plus } from 'lucide-react-native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
+import * as Haptics from 'expo-haptics';
 
 export default function TabLayout() {
   const { colors } = useTheme();
+
+  const handleTabPress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   return (
     <Tabs
@@ -27,6 +34,9 @@ export default function TabLayout() {
             <MapPin size={size} color={color} strokeWidth={2} />
           ),
         }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
       />
       <Tabs.Screen
         name="add"
@@ -36,6 +46,9 @@ export default function TabLayout() {
             <Plus size={size + 4} color={color} strokeWidth={2.5} />
           ),
         }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
       />
       <Tabs.Screen
         name="list"
@@ -44,6 +57,9 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <ListIcon size={size} color={color} strokeWidth={2} />
           ),
+        }}
+        listeners={{
+          tabPress: handleTabPress,
         }}
       />
     </Tabs>
